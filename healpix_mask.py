@@ -17,6 +17,8 @@ NEST=True
 NSIDE=4096
 
 
+# I'm gonna start using a bitmask now
+
 def cut_from_hotspots(ras, decs, radius=0.1):
     # Blocks pixels within 'radius' degrees of (ra, dec)
     cut = np.tile(True, healpy.nside2npix(NSIDE))

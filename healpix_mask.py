@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import numpy as np
 import healpy
 import astropy.io.fits as pyfits
@@ -7,8 +9,6 @@ import argparse
 import ugali.utils.projector
 import ugali.utils.healpix
 import ugali.candidate.associate
-
-import pdb
 
 p = argparse.ArgumentParser()
 p.add_argument('-l', '--load', default=None)
@@ -25,18 +25,12 @@ if load is not None:
 else:
     healpix_mask = np.tile(0, healpy.nside2npix(NSIDE))
 
-# Cuts to apply:
-apply_ebv = True
-apply_Nilson = False
-apply_external_cats = True
-apply_bsc = True
 
-if apply_ebv:
-    infile_dust = '/Users/mcnanna/Research/DES_luminosity/ebv_sfd98_fullres_nside_4096_nest_equatorial.fits.gz'
-    ebv_map = ugali.utils.healpix.read_map(infile_dust, nest=True)
+infile_dust = '/Users/mcnanna/Research/DES_luminosity/ebv_sfd98_fullres_nside_4096_nest_equatorial.fits.gz'
+ebv_map = ugali.utils.healpix.read_map(infile_dust, nest=True)
 
-    cut_ebv = (ebv_map > 0.2)
-    healpix_mask[cut_ebv] |= 0b0001
+cut_ebv = (ebv_map > 0.2)
+healpix_mask[cut_ebv] |= 0b0001
 
 
 def cut_from_hotspots(ras, decs, radius=0.1):
@@ -49,35 +43,21 @@ def cut_from_hotspots(ras, decs, radius=0.1):
     
     return cut
 
-if apply_Nilson:
-    external_cat_list = ['Nilson73'] #'Harris96', 'ExtraClusters', 'WEBDA14']
-    for external_cat in external_cat_list:
-        catalog = ugali.candidate.associate.catalogFactory(external_cat)
-        external_cut = cut_from_hotspots(catalog['ra'], catalog['dec'], radius=0.1)
-        healpix_mask[external_cut] |= 0b0010
-
-if apply_external_cats:
-    external_cat_list = ['McConnachie15', 'Harris96', 'Corwen04', 'Nilson73', 'Webbink85', 'Kharchenko13', 'Bica08', 'WEBDA14', 'ExtraDwarfs','ExtraClusters']
-    for external_cat in external_cat_list:
-        catalog = ugali.candidate.associate.catalogFactory(external_cat)
-        external_cut = cut_from_hotspots(catalog['ra'], catalog['dec'], radius=0.1)
-        healpix_mask[external_cut] |= 0b0010
+#external_cat_list = ['Nilson73'] #'Harris96', 'ExtraClusters', 'WEBDA14']
+external_cat_list = ['McConnachie15', 'Harris96', 'Corwen04', 'Nilson73', 'Webbink85', 'Kharchenko13', 'Bica08', 'WEBDA14', 'ExtraDwarfs','ExtraClusters']
+for external_cat in external_cat_list:
+    catalog = ugali.candidate.associate.catalogFactory(external_cat)
+    external_cut = cut_from_hotspots(catalog['ra'], catalog['dec'], radius=0.1)
+    healpix_mask[external_cut] |= 0b0010
 
 
-if apply_bsc:
-    reader_bsc = pyfits.open('/Users/mcnanna/Research/DES_luminosity/bsc5.fits')
-    d_bsc = reader_bsc[1].data
-    bsc_cut = cut_from_hotspots(d_bsc['RA'], d_bsc['DEC'], radius=0.1)
-    healpix_mask[bsc_cut] |= 0b0100
+reader_bsc = pyfits.open('/Users/mcnanna/Research/DES_luminosity/bsc5.fits')
+d_bsc = reader_bsc[1].data
+bsc_cut = cut_from_hotspots(d_bsc['RA'], d_bsc['DEC'], radius=0.1)
+healpix_mask[bsc_cut] |= 0b0100
 
-
-names = np.array(['ebv', 'Nilson', 'ext', 'bsc'])
-bools = [apply_ebv, apply_Nilson, apply_external_cats, apply_bsc]
-trailer = '_{}'.format('_'.join(names[bools]))
-
-print('writing healpix_mask'+trailer+' ...')
-healpy.write_map('masks/healpix_mask'+trailer+'.fits', healpix_mask, dtype=np.int32, nest=NEST, coord='C', overwrite=True)
+healpy.write_map('healpix_mask.fits', healpix_mask, dtype=np.int32, nest=NEST, coord='C', overwrite=True)
 
 pylab.figure()
 healpy.mollview(healpix_mask, nest=True, coord='C', cmap='binary')
-pylab.savefig('mask_plots/healpix_mask'+trailer)
+pylab.savefig('healpix_mask.png')

@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import numpy as np
 import healpy
 import astropy.io.fits as pyfits
@@ -7,20 +9,15 @@ import ugali.utils.projector
 import ugali.utils.healpix
 import ugali.candidate.associate
 
-import pdb
-
 pylab.ion()
-
 
 infile = '/Users/mcnanna/Research/DES_luminosity/candidate_list.fits'
 r = pyfits.open(infile)
 d_original = r[1].data
 r.close()
 
-
 # Minimum significance threshold
 d = d_original[d_original['SIG'] > 5.]
-
 
 
 # Iterative approach
@@ -33,13 +30,9 @@ for ii in range(0, 5):
     cut_consolidate[index_exclude] = False
     d = d[cut_consolidate]
 
-#d = d[(d['ra'] < 330) & (d['ra'] > 315) & (d['dec'] < 0) & (d['dec'] > -30) & (d['SIG'] > 10)]
-#print(d)
 
 pix = ugali.utils.healpix.angToPix(4096, d['ra'], d['dec'], nest=True)
-mask = ugali.utils.healpix.read_map('masks/healpix_mask_ebv_ext_bsc.fits', nest=True)
-#mask = healpy.read_map('masks/healpix_mask_ebv_ext_bsc.fits', nest=True, dtype=np.int32)
-pdb.set_trace()
+mask = ugali.utils.healpix.read_map('healpix_mask.fits.gz', nest=True)
 
 cut_dec = (d['DEC'] > -25.)
 cut_modulus = (d['MODULUS'] < 21.75)
@@ -68,7 +61,7 @@ pylab.hist(d['SIG'][cut_ebv & cut_dec & cut_modulus & cut_associate & cut_bsc & 
 pylab.legend(loc='upper right')
 pylab.xlabel('SIG')
 pylab.ylabel('Cumulative Counts')
-pylab.savefig('plots/significance_distribution_mask.png')
+pylab.savefig('significance_distribution.png')
 
 
 # Skymap of candidates
@@ -83,7 +76,7 @@ healpy.projscatter(d['RA'][cut], d['DEC'][cut], lonlat=True, c='red', marker='o'
 healpy.projscatter(d['RA'][cut & cut_ebv & cut_dec], d['DEC'][cut & cut_ebv & cut_dec], lonlat=True, c='blue', marker='o', edgecolor='none', s=2, vmax=0.5)
 healpy.projscatter(d['RA'][cut & cut_ebv & cut_dec & cut_modulus], d['DEC'][cut & cut_ebv & cut_dec & cut_modulus], lonlat=True, c='green', marker='o', edgecolor='none', s=2, vmax=0.5)
 healpy.projscatter(d['RA'][cut & cut_ebv & cut_dec & cut_modulus & cut_associate], d['DEC'][cut & cut_ebv & cut_dec & cut_modulus & cut_associate], lonlat=True, c='magenta', marker='o', edgecolor='none', s=10, vmax=0.5)
-pylab.savefig('plots/significance_map_mask.png')
+pylab.savefig('significance_map.png')
 
 
 pylab.figure()
@@ -91,7 +84,7 @@ pylab.hist(d['MODULUS'][cut & cut_ebv & cut_dec], bins=np.arange(14.25, 25.25, 0
 pylab.xlabel('m-M')
 pylab.ylabel('Counts')
 pylab.title('E(B-V) < 0.2 mag & Dec > -25 deg & SIG > 10')
-pylab.savefig('plots/modulus_distribution.png')
+pylab.savefig('modulus_distribution.png')
 
 
 cut_sig = (d['SIG'] > 6.)

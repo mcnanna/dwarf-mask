@@ -56,7 +56,8 @@ d_bsc = reader_bsc[1].data
 bsc_cut = cut_from_hotspots(d_bsc['RA'], d_bsc['DEC'], radius=0.1)
 healpix_mask[bsc_cut] |= 0b0100
 
-healpy.write_map('healpix_mask.fits', healpix_mask, dtype=np.int32, nest=NEST, coord='C', overwrite=True)
+print('Writing map...')
+healpy.write_map('healpix_mask.fits.gz', healpix_mask, dtype=np.int32, nest=NEST, coord='C', overwrite=True)
 
 pylab.figure()
 healpy.mollview(healpix_mask, nest=True, coord='C', cmap='binary')

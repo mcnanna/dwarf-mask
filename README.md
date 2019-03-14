@@ -2,7 +2,7 @@
 Masking for dwarf searches in PS1 and DES
 
 ## Making the mask
-The code for this is healpix_mask.py. The mask has
+The code for this is healpix_mask.py. The mask has \n
 NSIDE = 4096
 COOORD = CEL
 ORDERING = NESTED

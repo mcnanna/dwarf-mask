@@ -92,39 +92,39 @@ class McConnachie12(SourceCatalog):
         glon,glat = cel2gal(self.data['ra'],self.data['dec'])
         self.data['glon'],self.data['glat'] = glon,glat
 
-class McConnachie15(McConnachie12):
-    pass
 
-#class McConnachie15(SourceCatalog):
-#    """
-#    Catalog of nearby dwarf spheroidal galaxies. Updated September 2015.
-#    http://arxiv.org/abs/1204.1562
-#
-#    http://www.astro.uvic.ca/~alan/Nearby_Dwarf_Database_files/NearbyGalaxies.dat
-#    """
-#    def _load(self,filename):
-#        if filename is None: 
-#            filename = os.path.join(self.DATADIR,"J_AJ_144_4/NearbyGalaxies.dat")
-#        self.filename = filename
-# 
-#        delimiter = [19,3,3,5,3,3,3,6,6,5,5,7,5,5,5,4,4,6,5,5,5,5,5,5,4,4,7,6,6,5,5,5,5,5,5,5,5,5,5,6,5,5,6,5,5,2]
-#        raw = np.genfromtxt(filename,delimiter=delimiter,usecols=list(range(7))+[26],dtype=['|S19']+7*[float],skip_header=36)
-#
-#        self.data.resize(len(raw))
-#        self.data['name'] = np.char.lstrip(np.char.strip(raw['f0']),'*')
-#
-#        ra = raw[['f1','f2','f3']].view(float).reshape(len(raw),-1)
-#        dec = raw[['f4','f5','f6']].view(float).reshape(len(raw),-1)
-#        radius = raw['f7']
-#        self.data['ra'] = ugali.utils.projector.hms2dec(ra)
-#        self.data['dec'] = ugali.utils.projector.dms2dec(dec)
-#        # McConnachie sets "bad" radius to either 99.99 or 9.999
-#        default_r = np.nan # arcmin
-#        self.data['radius'] = np.array([r if set(str(r))!=set('9.') else default_r for r in radius]) 
-#
-#        
-#        glon,glat = cel2gal(self.data['ra'],self.data['dec'])
-#        self.data['glon'],self.data['glat'] = glon,glat
+class McConnachie15(SourceCatalog):
+    """
+    Catalog of nearby dwarf spheroidal galaxies. Updated September 2015.
+    http://arxiv.org/abs/1204.1562
+
+    http://www.astro.uvic.ca/~alan/Nearby_Dwarf_Database_files/NearbyGalaxies.dat
+    """
+    def _load(self,filename):
+        if filename is None: 
+            filename = os.path.join(self.DATADIR,"J_AJ_144_4/NearbyGalaxies.dat")
+        self.filename = filename
+ 
+        delimiter = [19,3,3,5,3,3,3,6,6,5,5,7,5,5,5,4,4,6,5,5,5,5,5,5,4,4,7,6,6,5,5,5,5,5,5,5,5,5,5,6,5,5,6,5,5,2]
+        raw = np.genfromtxt(filename,delimiter=delimiter,usecols=list(range(7))+[26],dtype=['|S19']+7*[float],skip_header=36)
+
+        self.data.resize(len(raw))
+        self.data['name'] = np.char.lstrip(np.char.strip(raw['f0']),'*')
+
+        ra = raw[['f1','f2','f3']].view(float).reshape(len(raw),-1)
+        dec = raw[['f4','f5','f6']].view(float).reshape(len(raw),-1)
+        self.data['ra'] = ugali.utils.projector.hms2dec(ra)
+        self.data['dec'] = ugali.utils.projector.dms2dec(dec)
+
+        radius = raw['f7']
+        # McConnachie sets "bad" radius to either 99.99 or 9.999
+        bad_r = np.nan # arcmin
+        radius = np.array([r if set(str(r))!=set('9.') else bad_r for r in radius]) 
+        self.data['radius'] = radius/60.0 # Half-light radius along major axis
+        # Could also include ellipticity and position angle
+
+        glon,glat = cel2gal(self.data['ra'],self.data['dec'])
+        self.data['glon'],self.data['glat'] = glon,glat
 
 
 class Rykoff14(SourceCatalog):

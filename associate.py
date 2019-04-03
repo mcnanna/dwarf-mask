@@ -19,6 +19,10 @@ import astropy.table
 from astroquery.vizier import Vizier
 Vizier.ROW_LIMIT = -1
 
+
+FILTER_DWARFS=True
+        
+
 class SourceCatalog(object):
     DATADIR=get_cat_dir()
  
@@ -206,6 +210,8 @@ class Corwen04(SourceCatalog):
             raw = np.genfromtxt(filename,**kwargs)
         self.filename = filename
 
+        #raw = raw[(raw['f0'] != 'I') | (raw['f1'] != 1613)] # IC 1613
+
         # Some entries are missing...
         raw['f4'] = np.where(np.isnan(raw['f4']),0,raw['f4'])
         raw['f7'] = np.where(np.isnan(raw['f7']),0,raw['f7'])
@@ -231,6 +237,12 @@ class Nilson73(SourceCatalog):
     """
     def _load(self,filename):
         raw = Vizier.get_catalogs('VII/26D')[0]
+        if FILTER_DWARFS:
+            raw = raw[raw['UGC'] != 10822] # Draco (UGC 10822)
+            raw = raw[raw['UGC'] != 9749] # Ursa Minor (UGC 9749)
+            raw = raw[raw['UGC'] != 5470] # Leo I (UGC 5470)
+            raw = raw[raw['UGC'] != 6253] # Leo II (UGC 6253)
+            #raw = raw[raw['UGC'] != 668] # IC 1613 (UGC 668)
         
         self.data.resize(len(raw))
         self.data['name'] = np.char.mod('UGC %s', raw['UGC'])
@@ -291,6 +303,9 @@ class Kharchenko13(SourceCatalog):
     """
     def _load(self,filename):
         raw = Vizier.get_catalogs('J/A+A/558/A53')
+        if FILTER_DWARFS:
+            raw = [ raw[0][raw[0]['MWSC'] != '2020'] , raw[1], raw[2] ] # Coma Berenices (Melotte_111)
+
         self.data.resize(len(raw[0]))
 
         ids = np.array(map(int, raw[0]['MWSC'])) - 1
@@ -385,6 +400,10 @@ class ExtraClusters(SourceCatalog):
             filename = os.path.join(self.DATADIR,"extras/extra_clusters.csv")
         self.filename = filename
         raw = np.recfromcsv(filename,**kwargs)
+        if FILTER_DWARFS:
+            raw = raw[raw['name'] != 'Laevens 1'] # Triangulum II (Laevens 1, seems like some kind of naming mixup between Laevens 1 and 2)
+            raw = raw[raw['name'] != 'Kim 2'] # Indus 1 (Kim 2)
+            pass
         
         self.data.resize(len(raw))
         self.data['name'] = raw['name']

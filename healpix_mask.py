@@ -111,7 +111,7 @@ if args.survey is not None:
 pylab.figure()
 healpy.mollview(healpix_mask, nest=True, coord='C', cmap='binary')
 if args.write:
-    pylab.savefig('healpix_mask_{}.png'.format(args.survey))
+    pylab.savefig('healpix_mask_{}.png'.format(args.survey), bbox_inches='tight')
 
 if args.write:
     print('Writing map...')

@@ -112,6 +112,9 @@ class McConnachie15(SourceCatalog):
         delimiter = [19,3,3,5,3,3,3,6,6,5,5,7,5,5,5,4,4,6,5,5,5,5,5,5,4,4,7,6,6,5,5,5,5,5,5,5,5,5,5,6,5,5,6,5,5,2]
         raw = np.genfromtxt(filename,delimiter=delimiter,usecols=list(range(7))+[26],dtype=['|S19']+7*[float],skip_header=36)
 
+        raw[['LMC' in name for name in raw['f0']].index(True)]['f7'] = 540.0 # LMC radius = 9 deg
+        raw[['SMC' in name for name in raw['f0']].index(True)]['f7'] = 180.0 # LMC radius = 3 deg
+
         self.data.resize(len(raw))
         self.data['name'] = np.char.lstrip(np.char.strip(raw['f0']),'*')
 
@@ -242,7 +245,6 @@ class Nilson73(SourceCatalog):
             raw = raw[raw['UGC'] != 9749] # Ursa Minor (UGC 9749)
             raw = raw[raw['UGC'] != 5470] # Leo I (UGC 5470)
             raw = raw[raw['UGC'] != 6253] # Leo II (UGC 6253)
-            #raw = raw[raw['UGC'] != 668] # IC 1613 (UGC 668)
         
         self.data.resize(len(raw))
         self.data['name'] = np.char.mod('UGC %s', raw['UGC'])

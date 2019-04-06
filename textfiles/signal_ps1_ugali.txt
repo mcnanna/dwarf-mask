@@ -94,3 +94,4 @@
                      name             TS        modulus         angsep       bit       cut
             Triangulum II          89.55          17.00          0.011         4          
               Pegasus III           0.00           0.00          0.000         4          
+              Aquarius II          52.88          20.00          0.016         4          

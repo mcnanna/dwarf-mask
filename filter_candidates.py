@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import subprocess
 import numpy as np
 import healpy
 import astropy.io.fits as pyfits
@@ -15,14 +16,17 @@ import associate
 p = argparse.ArgumentParser()
 p.add_argument('survey', help="'ps1' or 'des'")
 p.add_argument('alg', help = "'u'/'ugali' or 's'/'simple'")
+p.add_argument('--no_cross', action='store_true', help="Don't cross-check between the two algorithms. Use this is you only have the candidates for one algorithm")
+p.add_argument('--no_textfile', action='store_true', help=argparse.SUPPRESS)
 args = p.parse_args()
 if 'u' in args.alg:
     args.alg = 'ugali'
 elif 's' in args.alg:
     args.alg = 'simple'
 
+subprocess.call('mkdir -p textfiles diagnostic_plots'.split())
 
-infile = '/Users/mcnanna/Research/DES_luminosity/candidate_list_{0}_{1}.fits'.format(args.survey, args.alg)
+infile = 'candidates/candidate_list_{0}_{1}.fits'.format(args.survey, args.alg)
 r = pyfits.open(infile)
 d_original = r[1].data
 r.close()
@@ -59,7 +63,7 @@ cut_associate = np.where(mask[pix] & 0b0010, False, True)
 cut_dwarfs = np.where(mask[pix] & 0b0100, False, True)
 cut_bsc = np.where(mask[pix] & 0b1000, False, True)
 
-# Other cuts (modulous, size, shape)
+# Other cuts (modulus, size, shape)
 if args.survey == 'ps1':
     cut_modulus = (d['MODULUS'] < 21.75)
 elif args.survey == 'des':
@@ -90,28 +94,54 @@ if args.alg == 'simple':
 
 cut_final = cut_bulk & cut_dwarfs & cut_sig
 
+
 # List of unassociated hotspots
-f = open('textfiles/remainers_{}_{}.txt'.format(args.survey, args.alg), 'w')
+f = open('textfiles/remains_{}_{}.txt'.format(args.survey, args.alg), 'w')
+if args.alg == 'ugali':
+    f.write('%20s'%('name'))
 f.write('%10s%10s%10s%10s\n'%(SIG, 'ra', 'dec', 'modulus'))
 for remainer in d[cut_final]:
+    if args.alg == 'ugali':
+        f.write('%20s'%(''.join(remainer['NAME'].split())))
     f.write('%10.2f%10.2f%10.2f%10.2f\n'%(remainer[SIG], remainer['ra'], remainer['dec'], remainer['modulus']))
 f.close()
 
 
 # Cross-check with other algorithm
-# Note: this will cause an error if the text other alg's text file hasn't been written yet (see code above), so comment it out if you haven't made it yet
-if args.alg == 'simple':
-    d2 = np.genfromtxt('textfiles/remainers_{}_ugali.txt'.format(args.survey), names=True)
-if args.alg == 'ugali':
-    d2 = np.genfromtxt('textfiles/remainers_{}_simple.txt'.format(args.survey), names=True)
+if not args.no_cross:
+    if args.alg == 'simple':
+        try:
+            d2 = np.genfromtxt('textfiles/remains_{}_ugali.txt'.format(args.survey), names=True)
+        except IOError:
+            subprocess.call('python filter_candidates.py {} ugali --no_textfile'.format(args.survey).split())
+            d2 = np.genfromtxt('textfiles/remains_{}_ugali.txt'.format(args.survey), names=True)
+    if args.alg == 'ugali':
+        try:
+            d2 = np.genfromtxt('textfiles/remains_{}_simple.txt'.format(args.survey), names=True)
+        except IOError:
+            subprocess.call('python filter_candidates.py {} simple --no_textfile'.format(args.survey).split())
+            d2 = np.genfromtxt('textfiles/remains_{}_simple.txt'.format(args.survey), names=True)
 
-match1, match2, angseps = ugali.utils.projector.match(d['ra'][cut_final], d['dec'][cut_final], d2['ra'], d2['dec'], tol=0.5)
-matches = d[cut_final][match1]
-cut_cross = np.array([d[i]['ra'] in matches['ra'] for i in range(len(d))])
 
+    match1, match2, angseps = ugali.utils.projector.match(d['ra'][cut_final], d['dec'][cut_final], d2['ra'], d2['dec'], tol=0.2)
+    matches = d[cut_final][match1]
+    cut_cross = np.array([d[i]['ra'] in matches['ra'] for i in range(len(d))])
+
+    if args.alg == 'ugali':
+        f = open('textfiles/remains_{}_both.txt'.format(args.survey), 'w')
+        f.write('%20s%10s%10s%10s%10s%12s%12s%10s\n'%('name', 'TS', 'SIG', 'ra', 'dec', 'mod ugali', 'mod simple', 'angsep'))
+        for i in range(len(angseps)):
+            uga = d[match1[i]]
+            sim = d2[match2[i]]
+            angsep = angseps[i]
+            f.write('%20s%10.2f%10.2f%10.2f%10.2f%12.2f%12.2f%10.2f\n'%(''.join(uga['NAME'].split()), uga['TS'], sim['SIG'], uga['ra'], uga['dec'], uga['modulus'], sim['modulus'], angsep))
+        f.close()
+
+
+    if args.no_textfile:
+        raise SystemExit(0)
 
 ### Signal Detection
-
 
 # Detections of known satellites
 def print_detections(known_dwarf_catalog, write='w'):
@@ -144,7 +174,7 @@ def print_detections(known_dwarf_catalog, write='w'):
             modulus= 0.
             bit = mask[ugali.utils.healpix.angToPix(4096, known_dwarfs.data['ra'][ii], known_dwarfs.data['dec'][ii], nest=True)]
             wascut = ''
-        if bit < 16:
+        if not (bit & 0b10000):
             if args.alg == 'simple':
                 f.write('%25s%15.2f%15.2f%15.3f%15.3f%15.3f%10i%10s\n'%(known_dwarfs.data['name'][ii], sig, modulus, r, ratio_candidate, a, bit, wascut))
             elif args.alg == 'ugali':
@@ -169,6 +199,7 @@ def what_matches(name, known_dwarf_catalog='McConnachie15'):
             radius = catalog[index]['radius']
             print '%15s%15s%10.3f%10.3f'%(cat, catalog[index]['name'], radius, angsep) 
 
+
 # Significance histogram 
 pylab.figure()
 if args.alg == 'simple':
@@ -192,10 +223,10 @@ pylab.hist(d[SIG][cut_bulk & cut_dwarfs & cut_cross], bins=bins, color='darkturq
 pylab.legend(loc='upper right')
 pylab.xlabel(SIG)
 pylab.ylabel('Cumulative Counts')
-pylab.savefig('plots/significance_distribution_{}_{}.png'.format(args.survey, args.alg), bbox_inches='tight')
+pylab.savefig('diagnostic_plots/significance_distribution_{}_{}.png'.format(args.survey, args.alg), bbox_inches='tight')
 
 # Skymap of candidates
-infile_dust = '/Users/mcnanna/Research/DES_luminosity/ebv_sfd98_fullres_nside_4096_nest_equatorial.fits.gz'
+infile_dust = 'ebv_sfd98_fullres_nside_4096_nest_equatorial.fits.gz'
 ebv_map = ugali.utils.healpix.read_map(infile_dust, nest=True)
 
 pylab.figure()
@@ -206,7 +237,7 @@ healpy.projscatter(d['RA'][cut_sig & cut_ebv & cut_footprint], d['DEC'][cut_sig 
 healpy.projscatter(d['RA'][cut_sig & cut_ebv & cut_footprint & cut_modulus], d['DEC'][cut_sig & cut_ebv & cut_footprint & cut_modulus], lonlat=True, c='green', marker='o', edgecolor='none', s=2, vmax=0.5)
 healpy.projscatter(d['RA'][cut_final & ~cut_cross], d['DEC'][cut_final & ~cut_cross], lonlat=True, c='purple', marker='o', edgecolor='none', s=10, vmax=0.5)
 healpy.projscatter(d['RA'][cut_final & cut_cross], d['DEC'][cut_final & cut_cross], lonlat=True, c='darkturquoise', marker='*', edgecolor='none', s=40, vmax=0.5)
-pylab.savefig('plots/significance_map_{}_{}.png'.format(args.survey, args.alg), bbox_inches='tight')
+pylab.savefig('diagnostic_plots/significance_map_{}_{}.png'.format(args.survey, args.alg), bbox_inches='tight')
 
 # Modulus distribution of remainers
 pylab.figure()
@@ -214,49 +245,4 @@ pylab.hist(d['MODULUS'][cut_final], bins=np.arange(14.25, 25.25, 0.5), cumulativ
 pylab.xlabel('m-M')
 pylab.ylabel('Counts')
 pylab.title('Unassociated Hotspots')
-pylab.savefig('plots/modulus_distribution_{}_{}.png'.format(args.survey, args.alg), bbox_inches='tight')
-
-
-###############################################################
-# Below is all stuff that was included in Keith's original code. 
-# I'm not using it, but I didn't want to erase it either 
-"""
-d_final = d[cut_final]
-
-
-pylab.figure()
-#pylab.scatter(d_final[SIG], d_final['r'], c=d_final['N_OBS'], s=2, vmax=50)
-pylab.hexbin(d_final[SIG], d_final['r'], mincnt=1)
-pylab.colorbar()
-
-
-pylab.figure()
-#pylab.scatter(d_final[SIG], core / full, s=2)
-pylab.hexbin(d_final[SIG], ratio, mincnt=1)
-
-pylab.figure()
-pylab.hist(ratio, bins=51)
-
-
-def uniqueIdentifier(data):
-    #return np.round(np.random.random(10)).astype(int)(data['ra'] * 1.e6) + data['dec']
-    #return np.round((data['ra'] * 1.e3) + (data['dec'] * 1.e9)).astype(int)
-    #return '%.3f%.3f'%(data['ra'], data['dec'])
-    #return 
-    return ugali.utils.healpix.angToPix(2**14, data['ra'], data['dec'])
-
-
-unique_identifier_original = uniqueIdentifier(d_original)
-
-unique_identifier_final = uniqueIdentifier(d_final)
-cut_subset = np.in1d(unique_identifier_original, unique_identifier_final)
-
-print int(np.sum(cut_subset))
-print len(d_final)
-assert int(np.sum(cut_subset)) == len(d_final)
-
-hdu = pyfits.BinTableHDU(d_original[cut_subset])
-#hdu.writeto('candidate_list_subset.fits', clobber=True)
-
-#match_1, match_2, angsep = ugali.utils.projector.match(d_final['ra'], d_final['dec'], d_final['ra'], d_final['dec'], tol=0.01, nnearest=2)
-"""
+pylab.savefig('diagnostic_plots/modulus_distribution_{}_{}.png'.format(args.survey, args.alg), bbox_inches='tight')

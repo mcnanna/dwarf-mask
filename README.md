@@ -20,5 +20,6 @@ If a radius is not given in the object catalogs, it defaults to 0.1 deg.
 The footprint for Pan-STARRS is defined as dec > -25. 
 
 ## Applying the mask and filtering candidates
-filter_candidates.py uses the mask plus additional cuts to filter candidate_list.fits, making some diagnostic plots and writing the results to .txt files.
+filter_candidates.py uses the mask plus additional cuts to filter candidate .fits files located in the "candidates" directory. It expects the files to be of the form candidate_list_survey_alg.fits, where survey is one of des or ps1, and alg is one of ugali or simple. The code makes some diagnostic plots and writing the results to .txt files.
 In particular, it writes a signal.txt file showing how well known satellites are recovered, and a remains.txt file listing unassociated candidate hotspots. If possible, it will also write a remains_both.txt file showing hotspots which were found in both search algorithms. 
+It generates a cumulative histogram of the results as a function of significance, showing counts for each level of cuts. 

@@ -31,7 +31,7 @@ r = pyfits.open(infile)
 d_original = r[1].data
 r.close()
 
-# Minimum significance threshold
+# Minimum significance threshold (not used right now)
 d = d_original#[d_original['SIG'] > 5.] [d_original['TS'] > 25?]
 
 if args.alg == 'simple':
@@ -42,7 +42,7 @@ elif args.alg == 'ugali':
 
 ### Define and apply cuts
 
-# Consolidate nearby peaks, iterave approach
+# Consolidate nearby peaks, iterative approach
 done = False
 while not done:
     match_1, match_2, angsep = ugali.utils.projector.match(d['ra'], d['dec'], d['ra'], d['dec'], tol=0.5, nnearest=2)
@@ -57,11 +57,11 @@ while not done:
 pix = ugali.utils.healpix.angToPix(4096, d['ra'], d['dec'], nest=True)
 mask = ugali.utils.healpix.read_map('healpix_mask_{}.fits.gz'.format(args.survey), nest=True)
 
+cut_ebv = np.where(mask[pix] & 0b00001, False, True)
+cut_associate = np.where(mask[pix] & 0b00010, False, True)
+cut_dwarfs = np.where(mask[pix] & 0b00100, False, True)
+cut_bsc = np.where(mask[pix] & 0b01000, False, True)
 cut_footprint = np.where(mask[pix] & 0b10000, False, True)
-cut_ebv = np.where(mask[pix] & 0b0001, False, True)
-cut_associate = np.where(mask[pix] & 0b0010, False, True)
-cut_dwarfs = np.where(mask[pix] & 0b0100, False, True)
-cut_bsc = np.where(mask[pix] & 0b1000, False, True)
 
 # Other cuts (modulus, size, shape)
 if args.survey == 'ps1':
@@ -88,10 +88,12 @@ elif args.survey == 'des' and args.alg == 'ugali':
     min_sig = 50 #TS
 cut_sig = d[SIG] > min_sig
 
+# Combine cuts which should filter everything but dwarfs
 cut_bulk = cut_ebv & cut_footprint & cut_modulus & cut_associate & cut_bsc
 if args.alg == 'simple':
     cut_bulk = cut_bulk & cut_core & cut_size
 
+# Final cut also filters known satellites and low sig detections
 cut_final = cut_bulk & cut_dwarfs & cut_sig
 
 
@@ -109,6 +111,7 @@ f.close()
 
 # Cross-check with other algorithm
 if not args.no_cross:
+    # Load other alg's results from textfile created above
     if args.alg == 'simple':
         try:
             d2 = np.genfromtxt('textfiles/remains_{}_ugali.txt'.format(args.survey), names=True)
@@ -122,12 +125,11 @@ if not args.no_cross:
             subprocess.call('python filter_candidates.py {} simple --no_textfile'.format(args.survey).split())
             d2 = np.genfromtxt('textfiles/remains_{}_simple.txt'.format(args.survey), names=True)
 
-
     match1, match2, angseps = ugali.utils.projector.match(d['ra'][cut_final], d['dec'][cut_final], d2['ra'], d2['dec'], tol=0.2)
     matches = d[cut_final][match1]
     cut_cross = np.array([d[i]['ra'] in matches['ra'] for i in range(len(d))])
 
-    if args.alg == 'ugali':
+    if args.alg == 'ugali': # This 'if' is just so that it only writes this file once, although writing it twice isn't a big deal
         f = open('textfiles/remains_{}_both.txt'.format(args.survey), 'w')
         f.write('%20s%10s%10s%10s%10s%12s%12s%10s\n'%('name', 'TS', 'SIG', 'ra', 'dec', 'mod ugali', 'mod simple', 'angsep'))
         for i in range(len(angseps)):
@@ -137,9 +139,9 @@ if not args.no_cross:
             f.write('%20s%10.2f%10.2f%10.2f%10.2f%12.2f%12.2f%10.2f\n'%(''.join(uga['NAME'].split()), uga['TS'], sim['SIG'], uga['ra'], uga['dec'], uga['modulus'], sim['modulus'], angsep))
         f.close()
 
-
     if args.no_textfile:
         raise SystemExit(0)
+
 
 ### Signal Detection
 
@@ -174,7 +176,7 @@ def print_detections(known_dwarf_catalog, write='w'):
             modulus= 0.
             bit = mask[ugali.utils.healpix.angToPix(4096, known_dwarfs.data['ra'][ii], known_dwarfs.data['dec'][ii], nest=True)]
             wascut = ''
-        if not (bit & 0b10000):
+        if not (bit & 0b10000): # Don't bother writing results for things outside the footprint
             if args.alg == 'simple':
                 f.write('%25s%15.2f%15.2f%15.3f%15.3f%15.3f%10i%10s\n'%(known_dwarfs.data['name'][ii], sig, modulus, r, ratio_candidate, a, bit, wascut))
             elif args.alg == 'ugali':
@@ -216,9 +218,7 @@ pylab.hist(d[SIG][cut_ebv & cut_footprint & cut_modulus & cut_associate & cut_bs
 if args.alg == 'simple':
     pylab.hist(d[SIG][cut_ebv & cut_footprint & cut_modulus & cut_associate & cut_bsc & cut_core], bins=bins, color='brown', histtype='step', cumulative=-1, label='above & ratio > 1.') 
     pylab.hist(d[SIG][cut_ebv & cut_footprint & cut_modulus & cut_associate & cut_bsc & cut_core & cut_size], bins=bins, color='olive', histtype='step', cumulative=-1, label='above & r > 0.02') # = cut_bulk for simple
-    pylab.hist(d[SIG][cut_bulk & cut_dwarfs], bins=bins, color='purple', histtype='step', cumulative=-1, label='above & no dwarf assocation')
-elif args.alg == 'ugali':
-    pylab.hist(d[SIG][cut_bulk & cut_dwarfs], bins=bins, color='purple', histtype='step', cumulative=-1, label='above & no dwarf assocation')
+pylab.hist(d[SIG][cut_bulk & cut_dwarfs], bins=bins, color='purple', histtype='step', cumulative=-1, label='above & no dwarf assocation')
 pylab.hist(d[SIG][cut_bulk & cut_dwarfs & cut_cross], bins=bins, color='darkturquoise', histtype='step', cumulative=-1, label='above & found by both algorithms') 
 pylab.legend(loc='upper right')
 pylab.xlabel(SIG)

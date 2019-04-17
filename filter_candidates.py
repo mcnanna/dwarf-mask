@@ -142,10 +142,10 @@ if not args.no_cross:
     if args.no_textfile:
         raise SystemExit(0)
 
-print "Past cuts:", sum(cut_bulk & cut_dwarfs)
-print "Past sig:", sum(cut_sig)
-print "Past final:", sum(cut_final)
-print "Past cross:", sum(cut_cross)
+#print "Past cuts:", sum(cut_bulk & cut_dwarfs)
+#print "Past sig:", sum(cut_sig)
+#print "Past final:", sum(cut_final)
+#print "Past cross:", sum(cut_cross)
 
 
 ### Signal Detection

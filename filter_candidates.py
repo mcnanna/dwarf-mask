@@ -81,11 +81,11 @@ if args.alg == 'simple':
 if args.survey == 'ps1' and args.alg == 'simple':
     min_sig = 6.
 elif args.survey == 'ps1' and args.alg == 'ugali':
-    min_sig = 80 #TS
+    min_sig = 80. #TS
 elif args.survey == 'des' and args.alg == 'simple':
     min_sig = 7.
 elif args.survey == 'des' and args.alg == 'ugali':
-    min_sig = 50 #TS
+    min_sig = 50. #TS
 cut_sig = d[SIG] > min_sig
 
 # Combine cuts which should filter everything but dwarfs
@@ -133,7 +133,7 @@ if not args.no_cross:
         f = open('textfiles/remains_{}_both.txt'.format(args.survey), 'w')
         f.write('%20s%10s%10s%10s%10s%12s%12s%10s\n'%('name', 'TS', 'SIG', 'ra', 'dec', 'mod ugali', 'mod simple', 'angsep'))
         for i in range(len(angseps)):
-            uga = d[match1[i]]
+            uga = d[cut_final][match1[i]]
             sim = d2[match2[i]]
             angsep = angseps[i]
             f.write('%20s%10.2f%10.2f%10.2f%10.2f%12.2f%12.2f%10.2f\n'%(''.join(uga['NAME'].split()), uga['TS'], sim['SIG'], uga['ra'], uga['dec'], uga['modulus'], sim['modulus'], angsep))
@@ -141,6 +141,11 @@ if not args.no_cross:
 
     if args.no_textfile:
         raise SystemExit(0)
+
+print "Past cuts:", sum(cut_bulk & cut_dwarfs)
+print "Past sig:", sum(cut_sig)
+print "Past final:", sum(cut_final)
+print "Past cross:", sum(cut_cross)
 
 
 ### Signal Detection

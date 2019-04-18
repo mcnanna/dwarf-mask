@@ -1,0 +1,37 @@
+                     name             TS        modulus         angsep       bit       cut
+               Tucana III         346.00          16.50          0.012         4          
+              Reticulum 2        2976.66          17.00          0.009         4          
+                 Cetus II         109.70          17.00          0.042         0          
+                  Grus II         475.94          19.00          0.006         4          
+                 Tucana V         108.24          18.50          0.010         4          
+                 Tucana 2         449.33          18.50          0.036         4          
+            Horologium II         108.89          19.50          0.001         4          
+             Horologium 1         405.20          19.50          0.012         4          
+               Eridanus 3          50.29          20.00          0.012         4          
+                Phoenix 2         127.05          20.00          0.007         4          
+                 Sculptor      142500.61          20.00          0.018         4          
+            Reticulum III          40.95          20.50          0.010         4          
+                  Indus 1          35.78          20.00          0.008         4          
+                   Grus 1          95.58          20.50          0.010         4          
+               Pictoris 1          81.69          20.50          0.003         4          
+                   Fornax      157298.86          22.00          0.089         4          
+                Columba I          94.09          21.50          0.013         4          
+                 Indus II           0.00           0.00          0.000         4          
+                  IC 1613        6218.18          23.00          0.019         6       cut
+                  Phoenix        8120.79          23.00          0.006         4          
+               Eridanus 2        1152.87          23.00          0.003         4          
+                   Tucana           0.00           0.00          0.000         4          
+           ESO 410- G 005           0.00           0.00          0.000         4          
+                   NGC 55         169.12          22.50          0.102         2       cut
+           ESO 294- G 010           0.00           0.00          0.000         4          
+                  NGC 300        2535.28          22.00          0.035         6       cut
+                     name             TS        modulus         angsep       bit       cut
+             Reticulum II        2976.66          17.00          0.011         4          
+              Eridanus II        1152.87          23.00          0.004         4          
+                Tucana II         449.33          18.50          0.067         4          
+             Horologium I         405.20          19.50          0.004         4          
+               Pictoris I          81.69          20.50          0.006         4          
+               Phoenix II         127.05          20.00          0.004         4          
+             Eridanus III          50.29          20.00          0.015         4          
+                   Grus I          95.58          20.50          0.012         4          
+            Horologium II         108.89          19.50          0.002         4          

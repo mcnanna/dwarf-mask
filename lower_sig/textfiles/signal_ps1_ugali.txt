@@ -1,0 +1,97 @@
+                     name             TS        modulus         angsep       bit       cut
+                 Draco II          95.32          17.00          0.010         4          
+                Segue (I)         116.37          17.00          0.009         4          
+                 Cetus II          47.62          16.00          0.044         0          
+            Triangulum II          89.55          17.00          0.009         4          
+            Ursa Major II         244.51          18.00          0.016         4          
+                Bootes II          33.60          18.50          0.025         4          
+                 Segue II         115.60          18.00          0.022         4          
+                Willman 1         202.79          18.00          0.001         4          
+           Coma Berenices         233.89          18.50          0.011         4          
+               Bootes III           0.00           0.00          0.000         4          
+           Sagittarius II         135.83          19.00          0.014         4          
+               Bootes (I)         508.79          19.00          0.003         4          
+                    Draco        8525.13          20.00          0.008         4          
+               Ursa Minor        5219.52          19.50          0.034         4          
+              Sextans (I)        2008.83          20.00          0.003         4          
+           Ursa Major (I)          88.46          20.00          0.061         4          
+                 Hercules          82.91          21.00          0.016         4          
+                   Leo IV          62.46          21.00          0.018         4          
+        Canes Venatici II         108.68          21.00          0.002         4          
+                    Leo V          29.68          21.50          0.010         4          
+                Pisces II           0.00           0.00          0.000         4          
+                Pegasus 3           0.00           0.00          0.000         4          
+       Canes Venatici (I)        1295.98          21.50          0.008         4          
+                   Leo II       10826.75          22.00          0.008         4       cut
+                    Leo I       24847.08          22.50          0.005         4       cut
+                Andromeda           0.00           0.00          0.000        15          
+                      M32       75420.05          22.00          0.197         3       cut
+             Andromeda IX           0.00           0.00          0.000         6          
+                  NGC 205           0.00           0.00          0.000         6          
+              Andromeda I         232.10          22.50          0.025         6       cut
+           Andromeda XVII           0.00           0.00          0.000         6          
+          Andromeda XXVII           0.00           0.00          0.000         4          
+            Andromeda III          59.14          23.00          0.013         4       cut
+            Andromeda XXV           0.00           0.00          0.000         4          
+           Andromeda XXVI           0.00           0.00          0.000         4          
+              Andromeda V           0.00           0.00          0.000         4          
+             Andromeda XI           0.00           0.00          0.000         4          
+            Andromeda XIX           0.00           0.00          0.000         4          
+          Andromeda XXIII           0.00           0.00          0.000         4          
+             Andromeda XX           0.00           0.00          0.000         4          
+           Andromeda XIII           0.00           0.00          0.000         4          
+              Andromeda X           0.00           0.00          0.000         4          
+            Andromeda XXI           0.00           0.00          0.000         4          
+                And XXXII           0.00           0.00          0.000         4          
+                  NGC 147        3549.59          23.00          0.005         6       cut
+                  And XXX           0.00           0.00          0.000         4          
+            Andromeda XIV           0.00           0.00          0.000         6          
+            Andromeda XII           0.00           0.00          0.000         4          
+             Andromeda XV           0.00           0.00          0.000         6          
+             Andromeda II         985.52          23.00          0.014         6       cut
+                  NGC 185        7487.71          23.00          0.029         6       cut
+           Andromeda XXIX           0.00           0.00          0.000         4          
+               Triangulum       60648.13          17.00          0.004         6       cut
+           Andromeda XXIV           0.00           0.00          0.000         4          
+            Andromeda VII          46.02          22.00          0.040         4       cut
+                    IC 10           0.00           0.00          0.000         7          
+                 And XXXI           0.00           0.00          0.000         4          
+                    LGS 3         142.53          23.00          0.006         4       cut
+             Andromeda VI          89.45          23.00          0.003         4       cut
+           Andromeda XXII           0.00           0.00          0.000         4          
+            Andromeda XVI          39.20          23.00          0.011         4       cut
+         Andromeda XXVIII           0.00           0.00          0.000         4          
+               And XXXIII           0.00           0.00          0.000         4          
+                  IC 1613       12108.47          23.00          0.019         6       cut
+                 NGC 6822        7342.45          23.00          0.035         7       cut
+                    Cetus         471.19          23.00          0.002         4       cut
+             Pegasus dIrr         262.67          23.00          0.008         6       cut
+                    Leo T          71.45          23.00          0.006         4       cut
+                      WLM        1030.72          22.50          0.062         4       cut
+          Andromeda XVIII           0.00           0.00          0.000         4          
+                    Leo A         310.55          21.50          0.006         6       cut
+                 Aquarius           0.00           0.00          0.000         4          
+         Sagittarius dIrr           0.00           0.00          0.000         4          
+                 UGC 4879           0.00           0.00          0.000         6          
+                Sextans B         324.50          17.00          0.007         6       cut
+                Sextans A         637.10          21.00          0.003         4          
+               HIZSS 3(A)           0.00           0.00          0.000         5          
+                 HIZSS 3B           0.00           0.00          0.000         5          
+                    Leo P           0.00           0.00          0.000         4          
+                   KKR 25           0.00           0.00          0.000         4          
+                   KKH 98           0.00           0.00          0.000         4          
+                    KKR 3           0.00           0.00          0.000         4          
+                     GR 8           0.00           0.00          0.000         6          
+                 UGC 9128           0.00           0.00          0.000         6          
+                 UGC 8508          52.06          16.50          0.008         6       cut
+                  DDO 125          53.68          16.50          0.002         6       cut
+                  UGCA 86           0.00           0.00          0.000         5          
+                   DDO 99          96.90          21.50          0.031         2       cut
+                  DDO 190          27.86          16.00          0.009         6       cut
+                   KKH 86           0.00           0.00          0.000         4          
+                 NGC 4163           0.00           0.00          0.000         6          
+                  DDO 113           0.00           0.00          0.000         6          
+                     name             TS        modulus         angsep       bit       cut
+            Triangulum II          89.55          17.00          0.011         4          
+              Pegasus III           0.00           0.00          0.000         4          
+              Aquarius II          52.88          20.00          0.016         4          

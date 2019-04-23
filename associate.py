@@ -403,7 +403,6 @@ class ExtraClusters(SourceCatalog):
         self.filename = filename
         raw = np.recfromcsv(filename,**kwargs)
         if FILTER_DWARFS:
-            raw = raw[raw['name'] != 'Laevens 1'] # Triangulum II (Laevens 1, seems like some kind of naming mixup between Laevens 1 and 2)
             raw = raw[raw['name'] != 'Kim 2'] # Indus 1 (Kim 2)
             pass
         

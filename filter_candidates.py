@@ -159,11 +159,6 @@ if not args.no_cross:
     if args.no_textfile:
         raise SystemExit(0)
 
-#print "Passed cuts:", sum(cut_bulk & cut_dwarfs)
-#print "Passed sig:", sum(cut_sig)
-#print "Passed final:", sum(cut_final)
-#print "Passed cross:", sum(cut_cross)
-
 
 ### Signal Detection
 
@@ -304,3 +299,8 @@ pylab.xlabel('m-M')
 pylab.ylabel('Counts')
 pylab.title('Unassociated Hotspots')
 pylab.savefig('diagnostic_plots/modulus_distribution_{}_{}.png'.format(args.survey, args.alg), bbox_inches='tight')
+
+#print "Passed cuts:", sum(cut_bulk & cut_dwarfs)
+#print "Passed sig:", sum(cut_sig)
+#print "Passed final:", sum(cut_final)
+#print "Passed cross:", sum(cut_cross)

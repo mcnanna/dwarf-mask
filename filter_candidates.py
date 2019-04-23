@@ -97,7 +97,7 @@ f = open('textfiles/remains_{}_{}.txt'.format(args.survey, args.alg), 'w')
 if args.alg == 'ugali':
     f.write('%20s'%('name'))
 f.write('%10s%10s%10s%10s\n'%(SIG, 'ra', 'dec', 'modulus'))
-for remainer in d[cut_final]:
+for remainer in sorted(d[cut_final], key = lambda x: x[SIG], reverse=True):
     if args.alg == 'ugali':
         f.write('%20s'%(''.join(remainer['NAME'].split())))
     f.write('%10.2f%10.2f%10.2f%10.2f\n'%(remainer[SIG], remainer['ra'], remainer['dec'], remainer['modulus']))

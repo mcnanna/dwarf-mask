@@ -7,6 +7,7 @@ import astropy.io.fits as pyfits
 import pylab
 pylab.ion()
 import argparse
+from textable import TexTable
 
 import ugali.utils.projector
 import ugali.utils.healpix
@@ -16,6 +17,7 @@ import associate
 p = argparse.ArgumentParser()
 p.add_argument('survey', help="'ps1' or 'des'")
 p.add_argument('alg', help = "'u'/'ugali' or 's'/'simple'")
+p.add_argument('--sig', type=float, help="Minimum significance/TS threshold.")
 p.add_argument('--no_cross', action='store_true', help="Don't cross-check between the two algorithms. Use this is you only have the candidates for one algorithm")
 p.add_argument('--no_textfile', action='store_true', help=argparse.SUPPRESS)
 args = p.parse_args()
@@ -24,7 +26,7 @@ if 'u' in args.alg:
 elif 's' in args.alg:
     args.alg = 'simple'
 
-subprocess.call('mkdir -p textfiles diagnostic_plots'.split())
+subprocess.call('mkdir -p textfiles tables diagnostic_plots'.split())
 
 infile = 'candidates/candidate_list_{0}_{1}.fits'.format(args.survey, args.alg)
 r = pyfits.open(infile)
@@ -69,16 +71,10 @@ if args.survey == 'ps1':
 elif args.survey == 'des':
     cut_modulus = (d['MODULUS'] < 23.5)
 
-if args.alg == 'simple':
-    cut_size = (d['r'] >= 0.020)
-    model = d['N_MODEL'] / (np.pi * d['r']**2)
-    core = d['N_OBS_HALF'] / (np.pi * (0.5 * d['r'])**2)
-    full = d['N_OBS'] / (np.pi * d['r']**2)
-    ratio = (core - model) / (full - model)
-    cut_core = (ratio > 1.)
-
 # Significance cut
-if args.survey == 'ps1' and args.alg == 'simple':
+if args.sig is not None:
+    min_sig = args.sig
+elif args.survey == 'ps1' and args.alg == 'simple':
     min_sig = 6.
 elif args.survey == 'ps1' and args.alg == 'ugali':
     min_sig = 80. #TS
@@ -90,14 +86,13 @@ cut_sig = d[SIG] > min_sig
 
 # Combine cuts which should filter everything but dwarfs
 cut_bulk = cut_ebv & cut_footprint & cut_modulus & cut_associate & cut_bsc
-if args.alg == 'simple':
-    cut_bulk = cut_bulk & cut_core & cut_size
 
 # Final cut also filters known satellites and low sig detections
 cut_final = cut_bulk & cut_dwarfs & cut_sig
 
 
 # List of unassociated hotspots
+# As a .txt file
 f = open('textfiles/remains_{}_{}.txt'.format(args.survey, args.alg), 'w')
 if args.alg == 'ugali':
     f.write('%20s'%('name'))
@@ -107,6 +102,21 @@ for remainer in d[cut_final]:
         f.write('%20s'%(''.join(remainer['NAME'].split())))
     f.write('%10.2f%10.2f%10.2f%10.2f\n'%(remainer[SIG], remainer['ra'], remainer['dec'], remainer['modulus']))
 f.close()
+
+# As a LaTeX deluxetable
+justs = 'cccc'
+header_row1 = [SIG, r"$\alpha_{2000}$", r"$\delta_{2000}$", r"$m - M$"]
+header_row2 = ['', '(deg)', '(deg)', '']
+if args.alg == 'ugali':
+    justs = 'l' + justs
+    header_row1 = ['Name'] + header_row1
+    header_row2 = [''] + header_row2
+t = TexTable(len(justs), justs=justs, comments='', caption='')
+t.add_header_row(header_row1)
+t.add_header_row(header_row2)
+t.add_data(np.genfromtxt('textfiles/remains_{}_{}.txt'.format(args.survey, args.alg), skip_header=1, dtype=object).T)
+t.print_table('tables/remains_{}_{}.tex'.format(args.survey, args.alg))
+subprocess.call("pdflatex -output-directory tables tables/remains_{}_{}.tex".format(args.survey, args.alg).split())
 
 
 # Cross-check with other algorithm
@@ -131,7 +141,7 @@ if not args.no_cross:
 
     if args.alg == 'ugali': # This 'if' is just so that it only writes this file once, although writing it twice isn't a big deal
         f = open('textfiles/remains_{}_both.txt'.format(args.survey), 'w')
-        f.write('%20s%10s%10s%10s%10s%12s%12s%10s\n'%('name', 'TS', 'SIG', 'ra', 'dec', 'mod ugali', 'mod simple', 'angsep'))
+        f.write('%20s%10s%10s%10s%10s%12s%12s%10s\n'%('name', 'TS', 'SIG', 'ra', 'dec', 'mod_ugali', 'mod_simple', 'angsep'))
         for i in range(len(angseps)):
             uga = d[cut_final][match1[i]]
             sim = d2[match2[i]]
@@ -139,57 +149,102 @@ if not args.no_cross:
             f.write('%20s%10.2f%10.2f%10.2f%10.2f%12.2f%12.2f%10.2f\n'%(''.join(uga['NAME'].split()), uga['TS'], sim['SIG'], uga['ra'], uga['dec'], uga['modulus'], sim['modulus'], angsep))
         f.close()
 
+        t = TexTable(8, justs='lccccccc', comments='', caption='')
+        t.add_header_row(['Name', 'TS', 'SIG', r"$\alpha_{2000}$", r"$\delta_{2000}$", r"$m - M$", r"$m - M$", "Angular Separation"])
+        t.add_header_row(['', '(ugali)', '(simple)', '(deg)', '(deg)', '(ugali)', '(simple)', '(deg)'])
+        t.add_data(np.genfromtxt('textfiles/remains_{}_both.txt'.format(args.survey), skip_header=1, dtype=object).T)
+        t.print_table('tables/remains_{}_both.tex'.format(args.survey))
+        subprocess.call("pdflatex -output-directory tables tables/remains_{}_both.tex".format(args.survey).split())
+
     if args.no_textfile:
         raise SystemExit(0)
 
-#print "Past cuts:", sum(cut_bulk & cut_dwarfs)
-#print "Past sig:", sum(cut_sig)
-#print "Past final:", sum(cut_final)
-#print "Past cross:", sum(cut_cross)
+#print "Passed cuts:", sum(cut_bulk & cut_dwarfs)
+#print "Passed sig:", sum(cut_sig)
+#print "Passed final:", sum(cut_final)
+#print "Passed cross:", sum(cut_cross)
 
 
 ### Signal Detection
 
 # Detections of known satellites
+# As a .txt file
 def print_detections(known_dwarf_catalog, write='w'):
     known_dwarfs = associate.catalogFactory(known_dwarf_catalog)
     match_candidate, match_known_dwarfs, angsep = known_dwarfs.match(d['RA'], d['DEC'], coord='cel', tol=0.2)
 
     f = open('textfiles/signal_{}_{}.txt'.format(args.survey, args.alg), write)
-    if args.alg == 'simple':
-        f.write('%25s%15s%15s%15s%15s%15s%10s%10s\n'%('name', SIG, 'modulus', 'r', 'ratio', 'angsep', 'bit', 'cut'))
-    elif args.alg == 'ugali':
-        f.write('%25s%15s%15s%15s%10s%10s\n'%('name', SIG, 'modulus', 'angsep', 'bit', 'cut'))
+    f.write('%25s%15s%15s%15s%10s%10s\n'%('name', SIG, 'modulus', 'angsep', 'bit', 'cut'))
 
     for ii in range(0, len(known_dwarfs.data)):
         if ii in match_known_dwarfs:
             index = np.argmin(np.fabs(ii - match_known_dwarfs))
             sig = d[SIG][match_candidate[index]]
             a = angsep[index]
-            if args.alg == 'simple':
-                ratio_candidate = ratio[match_candidate[index]]
-                r = d['r'][match_candidate[index]]
             modulus = d['MODULUS'][match_candidate[index]]
             bit = mask[pix[match_candidate[index]]]
             wascut = '' if cut_bulk[match_candidate[index]] else 'cut'
         else:
             sig = 0.
             a = 0.
-            if args.alg == 'simple':
-                ratio_candidate = -9.
-                r = 0.
             modulus= 0.
             bit = mask[ugali.utils.healpix.angToPix(4096, known_dwarfs.data['ra'][ii], known_dwarfs.data['dec'][ii], nest=True)]
             wascut = ''
         if not (bit & 0b10000): # Don't bother writing results for things outside the footprint
-            if args.alg == 'simple':
-                f.write('%25s%15.2f%15.2f%15.3f%15.3f%15.3f%10i%10s\n'%(known_dwarfs.data['name'][ii], sig, modulus, r, ratio_candidate, a, bit, wascut))
-            elif args.alg == 'ugali':
-                f.write('%25s%15.2f%15.2f%15.3f%10i%10s\n'%(known_dwarfs.data['name'][ii], sig, modulus, a, bit, wascut))
+            f.write('%25s%15.2f%15.2f%15.3f%10i%10s\n'%(known_dwarfs.data['name'][ii], sig, modulus, a, bit, wascut))
     f.close()
 
-print_detections('McConnachie15', 'w')
-print_detections('ExtraDwarfs', 'a')
+print_detections("McConnachie15", 'w')
+print_detections("ExtraDwarfs", 'a')
+
+# As a LaTeX deluxetable
+def signal_table():
+    ncols = 5
+    justs = 'lcccc'
+    caption = '' #'\___caption' for paper
+    comments = '' #'\___comments' for paper
+
+    t = TexTable(ncols, justs=justs, caption=caption, comments=comments)
+    t.add_header_row(['Name', SIG, r'$m - M$', 'Angular Separation', ''])
+    t.add_header_row(['','','','(deg)', ''])
+
+    def get_signal(signal, known_dwarf_catalog):
+        known_dwarfs = associate.catalogFactory(known_dwarf_catalog)
+        match_candidate, match_known_dwarfs, angsep = known_dwarfs.match(d['RA'], d['DEC'], coord='cel', tol=0.2)
+
+        rows = []
+        for ii in range(0, len(known_dwarfs.data)):
+            if ii in match_known_dwarfs:
+                index = np.argmin(np.fabs(ii - match_known_dwarfs))
+                sig = d[SIG][match_candidate[index]]
+                a = angsep[index]
+                modulus = d['MODULUS'][match_candidate[index]]
+                bit = mask[pix[match_candidate[index]]]
+                wascut = '' if cut_bulk[match_candidate[index]] else 'cut'
+            else:
+                sig = 0.
+                a = 0.
+                modulus= 0.
+                bit = mask[ugali.utils.healpix.angToPix(4096, known_dwarfs.data['ra'][ii], known_dwarfs.data['dec'][ii], nest=True)]
+                wascut = ''
+            if not (bit & 0b10000): # Don't bother writing results for things outside the footprint
+                signal.append([known_dwarfs.data['name'][ii], sig, modulus, a, wascut])
+
+    signal = []
+    get_signal(signal, 'McConnachie15')
+    get_signal(signal, 'ExtraDwarfs')
+
+    galaxy_names = []
+    cut_duplicates = []
+    for galaxy in signal:
+        cut_duplicates.append(galaxy[0] not in galaxy_names)
+        galaxy_names.append(galaxy[0])
+    
+    t.add_data((np.array(signal, dtype=object)[np.array(cut_duplicates)]).T)
+    t.print_table('tables/signal_{}_{}.tex'.format(args.survey, args.alg))
+    subprocess.call("pdflatex -output-directory tables tables/signal_{}_{}.tex".format(args.survey, args.alg).split())
+    
+signal_table()
 
 # If a known satellite matches something in another catalog (you can tell from the bit), use this to find out what it's matching
 def what_matches(name, known_dwarf_catalog='McConnachie15'):
@@ -197,6 +252,7 @@ def what_matches(name, known_dwarf_catalog='McConnachie15'):
     obj = known_dwarfs[known_dwarfs['name'] == name]
     ra, dec = obj['ra'], obj['dec']
     external_cat_list = ['Harris96', 'Corwen04', 'Nilson73', 'Webbink85', 'Kharchenko13', 'Bica08', 'WEBDA14', 'ExtraClusters']
+    print '%15s%20s%10s%10s'%('catalog', 'name', 'radius', 'angsep')
     for cat in external_cat_list:
         catalog = associate.catalogFactory(cat)
         whocares, matches, angseps = catalog.match(ra, dec, coord='cel', tol=6.0)
@@ -204,7 +260,7 @@ def what_matches(name, known_dwarf_catalog='McConnachie15'):
             index = matches[i]
             angsep = angseps[i]
             radius = catalog[index]['radius']
-            print '%15s%15s%10.3f%10.3f'%(cat, catalog[index]['name'], radius, angsep) 
+            print '%15s%20s%10.3f%10.3f'%(cat, catalog[index]['name'], radius, angsep) 
 
 
 # Significance histogram 
@@ -219,10 +275,7 @@ pylab.hist(d[SIG], bins=bins, color='red', histtype='step', cumulative=-1, label
 pylab.hist(d[SIG][cut_ebv & cut_footprint], bins=bins, color='blue', histtype='step', cumulative=-1, label='E(B-V) < 0.2 mag\n& in footprint')
 pylab.hist(d[SIG][cut_ebv & cut_footprint & cut_modulus], bins=bins, color='green', histtype='step', cumulative=-1, label='above & (m - M) < {}'.format(21.75 if args.survey == 'ps1' else 23.5))
 pylab.hist(d[SIG][cut_ebv & cut_footprint & cut_modulus & cut_bsc], bins=bins, color='orange', histtype='step', cumulative=-1, label='above & no bsc association') 
-pylab.hist(d[SIG][cut_ebv & cut_footprint & cut_modulus & cut_associate & cut_bsc], bins=bins, color='black', histtype='step', cumulative=-1, label='above & no external association') # = cut_bulk for ugali
-if args.alg == 'simple':
-    pylab.hist(d[SIG][cut_ebv & cut_footprint & cut_modulus & cut_associate & cut_bsc & cut_core], bins=bins, color='brown', histtype='step', cumulative=-1, label='above & ratio > 1.') 
-    pylab.hist(d[SIG][cut_ebv & cut_footprint & cut_modulus & cut_associate & cut_bsc & cut_core & cut_size], bins=bins, color='olive', histtype='step', cumulative=-1, label='above & r > 0.02') # = cut_bulk for simple
+pylab.hist(d[SIG][cut_ebv & cut_footprint & cut_modulus & cut_associate & cut_bsc], bins=bins, color='black', histtype='step', cumulative=-1, label='above & no external association') # = cut_bulk
 pylab.hist(d[SIG][cut_bulk & cut_dwarfs], bins=bins, color='purple', histtype='step', cumulative=-1, label='above & no dwarf assocation')
 pylab.hist(d[SIG][cut_bulk & cut_dwarfs & cut_cross], bins=bins, color='darkturquoise', histtype='step', cumulative=-1, label='above & found by both algorithms') 
 pylab.legend(loc='upper right')

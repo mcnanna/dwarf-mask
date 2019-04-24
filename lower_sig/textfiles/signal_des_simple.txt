@@ -25,7 +25,7 @@
            ESO 410- G 005           6.12          16.00          0.012         4          
                    NGC 55          16.47          16.00          0.190         2       cut
            ESO 294- G 010           0.00           0.00          0.000         4          
-                  NGC 300          37.50          16.00          0.104         6       cut
+                  NGC 300          37.50          16.00          0.104         2       cut
                   IC 5152           8.97          24.00          0.039         6       cut
                      name            SIG        modulus         angsep       bit       cut
              Reticulum II          37.50          17.00          0.026         4          

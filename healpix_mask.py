@@ -37,7 +37,7 @@ cut_ebv = (ebv_map > 0.2)
 healpix_mask[cut_ebv] |= 0b00001
 
 
-def cut_circles(ras, decs, radii=None, default_radius=0.1, min_radius=6./60.):
+def cut_circles(ras, decs, radii=None, default_radius=0.1, min_radius=0.05):
     """Blocks pixels near given (ras, decs). 
     If radius (in degrees) are given, it blocks all pixels within disc of radius, with a minimum radius of min_radius.  
     If radius is not given or is nan, it defaults to default_radius (in degrees)
@@ -48,8 +48,10 @@ def cut_circles(ras, decs, radii=None, default_radius=0.1, min_radius=6./60.):
         radii = np.tile(default_radius, len(ras))
 
     for ra,dec,radius in zip(ras, decs, radii):
-        if np.isnan(radius) or radius <= min_radius:
+        if np.isnan(radius) or radius == 0:
             radius = default_radius
+        elif radius < min_radius:
+            radius = min_radius
         bad_pixels = ugali.utils.healpix.angToDisc(NSIDE, ra, dec, radius, nest=NEST, inclusive=True)
         cut[bad_pixels] = True
     
@@ -117,6 +119,4 @@ pylab.savefig('healpix_mask_{}.png'.format(args.survey), bbox_inches='tight')
 
 print('Writing map to healpix_mask_{}.fits.gz ...'.format(args.survey))
 healpy.write_map('healpix_mask_{}.fits.gz'.format(args.survey), healpix_mask, dtype=np.int32, nest=NEST, coord='C', overwrite=True)
-
-
 

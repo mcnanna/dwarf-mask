@@ -1,6 +1,6 @@
                      name            SIG        modulus         angsep       bit       cut
                  Draco II           7.90          17.50          0.009         4          
-                Segue (I)           8.55          16.50          0.008         6       cut
+                Segue (I)           8.55          16.50          0.008         4          
                  Cetus II           6.14          17.50          0.115         0          
             Triangulum II           6.76          17.50          0.011         4          
             Ursa Major II           8.86          18.50          0.015         4          
@@ -20,7 +20,7 @@
         Canes Venatici II           8.78          21.00          0.007         4          
                     Leo V           0.00           0.00          0.000         4          
                 Pisces II           4.39          21.00          0.045         4          
-                Pegasus 3           0.00           0.00          0.000         6          
+                Pegasus 3           0.00           0.00          0.000         4          
        Canes Venatici (I)          25.33          21.50          0.010         4          
                    Leo II           0.00           0.00          0.000         4          
                     Leo I           0.00           0.00          0.000         4          
@@ -32,16 +32,16 @@
            Andromeda XVII           0.00           0.00          0.000         6          
           Andromeda XXVII           0.00           0.00          0.000         4          
             Andromeda III           4.12          22.00          0.174         0       cut
-            Andromeda XXV           3.61          19.50          0.065         4          
-           Andromeda XXVI           4.10          21.00          0.093         4          
+            Andromeda XXV           3.61          19.50          0.065         0          
+           Andromeda XXVI           4.10          21.00          0.093         0          
               Andromeda V           0.00           0.00          0.000         4          
              Andromeda XI           0.00           0.00          0.000         4          
             Andromeda XIX           0.00           0.00          0.000         4          
           Andromeda XXIII           4.16          18.00          0.146         0          
              Andromeda XX           0.00           0.00          0.000         4          
-           Andromeda XIII           4.20          21.00          0.101         4          
+           Andromeda XIII           4.20          21.00          0.101         0          
               Andromeda X           0.00           0.00          0.000         4          
-            Andromeda XXI           4.83          20.00          0.082         4          
+            Andromeda XXI           4.83          20.00          0.082         0          
                 And XXXII           5.69          21.50          0.018         4          
                   NGC 147          18.50          22.00          0.010         6       cut
                   And XXX           0.00           0.00          0.000         4          
@@ -55,7 +55,7 @@
            Andromeda XXIV           0.00           0.00          0.000         4          
             Andromeda VII           0.00           0.00          0.000         4          
                     IC 10           0.00           0.00          0.000         7          
-                 And XXXI           4.56          16.50          0.095         4          
+                 And XXXI           4.56          16.50          0.095         0          
                     LGS 3           4.81          22.00          0.012         4       cut
              Andromeda VI           0.00           0.00          0.000         4          
            Andromeda XXII           0.00           0.00          0.000         4          
@@ -93,7 +93,7 @@
                   DDO 113           0.00           0.00          0.000         6          
                      name            SIG        modulus         angsep       bit       cut
             Triangulum II           6.76          17.50          0.014         4          
-              Pegasus III           0.00           0.00          0.000         6          
+              Pegasus III           0.00           0.00          0.000         4          
                  Cetus II           6.14          17.50          0.115         0          
                  Draco II           7.90          17.50          0.009         4          
               Aquarius II           5.07          21.50          0.042         4          

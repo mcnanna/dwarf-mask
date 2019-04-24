@@ -1,6 +1,6 @@
                      name             TS        modulus         angsep       bit       cut
                  Draco II          95.32          17.00          0.010         4          
-                Segue (I)         116.37          17.00          0.009         6       cut
+                Segue (I)         116.37          17.00          0.009         4          
                  Cetus II          47.62          16.00          0.044         4          
             Triangulum II          89.55          17.00          0.009         4          
             Ursa Major II         244.51          18.00          0.016         4          
@@ -20,7 +20,7 @@
         Canes Venatici II         108.68          21.00          0.002         4          
                     Leo V          29.68          21.50          0.010         4          
                 Pisces II           0.00           0.00          0.000         4          
-                Pegasus 3           0.00           0.00          0.000         6          
+                Pegasus 3           0.00           0.00          0.000         4          
        Canes Venatici (I)        1295.98          21.50          0.008         4          
                    Leo II       10826.75          22.00          0.008         4       cut
                     Leo I       24847.08          22.50          0.005         4       cut
@@ -93,7 +93,7 @@
                   DDO 113           0.00           0.00          0.000         6          
                      name             TS        modulus         angsep       bit       cut
             Triangulum II          89.55          17.00          0.011         4          
-              Pegasus III           0.00           0.00          0.000         6          
+              Pegasus III           0.00           0.00          0.000         4          
                  Cetus II          47.62          16.00          0.044         4          
                  Draco II          95.32          17.00          0.010         4          
               Aquarius II          52.88          20.00          0.016         4          

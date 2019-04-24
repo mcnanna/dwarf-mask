@@ -6,6 +6,7 @@ import healpy
 import astropy.io.fits as pyfits
 import pylab
 pylab.ion()
+from matplotlib.lines import Line2D
 import argparse
 from textable import TexTable
 
@@ -246,7 +247,7 @@ def what_matches(name, known_dwarf_catalog='McConnachie15'):
     known_dwarfs = associate.catalogFactory(known_dwarf_catalog)
     obj = known_dwarfs[known_dwarfs['name'] == name]
     ra, dec = obj['ra'], obj['dec']
-    external_cat_list = ['Harris96', 'Corwen04', 'Nilson73', 'Webbink85', 'Kharchenko13', 'Bica08', 'WEBDA14', 'ExtraClusters']
+    external_cat_list = ['Harris96', 'Corwen04', 'Nilson73', 'Webbink85', 'Kharchenko13', 'Bica08', 'WEBDA14', 'ExtraClusters', 'McConnachie15', 'ExtraDwarfs']
     print '%15s%20s%10s%10s'%('catalog', 'name', 'radius', 'angsep')
     for cat in external_cat_list:
         catalog = associate.catalogFactory(cat)
@@ -259,21 +260,24 @@ def what_matches(name, known_dwarf_catalog='McConnachie15'):
 
 
 # Significance histogram 
-pylab.figure()
+fig = pylab.figure()
+ax = fig.add_subplot(111)
 if args.alg == 'simple':
     bins = np.arange(5., 40.25, 0.5)
 elif args.alg == 'ugali':
     bins = np.logspace(np.log10(25.), np.log10(200000.), num=70)
     pylab.xscale('log')
 pylab.yscale('log')
-pylab.hist(d[SIG], bins=bins, color='red', histtype='step', cumulative=-1, label='All')
-pylab.hist(d[SIG][cut_ebv & cut_footprint], bins=bins, color='blue', histtype='step', cumulative=-1, label='E(B-V) < 0.2 mag\n& in footprint')
-pylab.hist(d[SIG][cut_ebv & cut_footprint & cut_modulus], bins=bins, color='green', histtype='step', cumulative=-1, label='above & (m - M) < {}'.format(21.75 if args.survey == 'ps1' else 23.5))
-pylab.hist(d[SIG][cut_ebv & cut_footprint & cut_modulus & cut_bsc], bins=bins, color='orange', histtype='step', cumulative=-1, label='above & no bsc association') 
-pylab.hist(d[SIG][cut_ebv & cut_footprint & cut_modulus & cut_associate & cut_bsc], bins=bins, color='black', histtype='step', cumulative=-1, label='above & no external association') # = cut_bulk
-pylab.hist(d[SIG][cut_bulk & cut_dwarfs], bins=bins, color='purple', histtype='step', cumulative=-1, label='above & no dwarf assocation')
-pylab.hist(d[SIG][cut_bulk & cut_dwarfs & cut_cross], bins=bins, color='darkturquoise', histtype='step', cumulative=-1, label='above & found by both algorithms') 
-pylab.legend(loc='upper right')
+ax.hist(d[SIG], bins=bins, color='red', histtype='step', cumulative=-1, label='All')
+ax.hist(d[SIG][cut_ebv & cut_footprint], bins=bins, color='blue', histtype='step', cumulative=-1, label='E(B-V) < 0.2 mag & in footprint')
+ax.hist(d[SIG][cut_ebv & cut_footprint & cut_modulus], bins=bins, color='green', histtype='step', cumulative=-1, label='above & (m - M) < {}'.format(21.75 if args.survey == 'ps1' else 23.5))
+ax.hist(d[SIG][cut_ebv & cut_footprint & cut_modulus & cut_bsc], bins=bins, color='orange', histtype='step', cumulative=-1, label='above & no bright star assoc.') 
+ax.hist(d[SIG][cut_ebv & cut_footprint & cut_modulus & cut_associate & cut_bsc], bins=bins, color='black', histtype='step', cumulative=-1, label='above & no catalog assoc.') # = cut_bulk
+ax.hist(d[SIG][cut_bulk & cut_dwarfs], bins=bins, color='purple', histtype='step', cumulative=-1, label='above & no known dwarf assoc.')
+ax.hist(d[SIG][cut_bulk & cut_dwarfs & cut_cross], bins=bins, color='darkturquoise', histtype='step', cumulative=-1, label='above & found by both algorithms') 
+handles, labels = ax.get_legend_handles_labels()
+new_handles = [Line2D([], [], c=h.get_edgecolor()) for h in handles]
+pylab.legend(loc='upper right', handles=new_handles, labels=labels)
 pylab.xlabel(SIG)
 pylab.ylabel('Cumulative Counts')
 pylab.savefig('diagnostic_plots/significance_distribution_{}_{}.png'.format(args.survey, args.alg), bbox_inches='tight')
@@ -300,7 +304,7 @@ pylab.ylabel('Counts')
 pylab.title('Unassociated Hotspots')
 pylab.savefig('diagnostic_plots/modulus_distribution_{}_{}.png'.format(args.survey, args.alg), bbox_inches='tight')
 
-#print "Passed cuts:", sum(cut_bulk & cut_dwarfs)
-#print "Passed sig:", sum(cut_sig)
-#print "Passed final:", sum(cut_final)
-#print "Passed cross:", sum(cut_cross)
+print "Passed cuts:", sum(cut_bulk & cut_dwarfs)
+print "Passed sig:", sum(cut_sig)
+print "Passed final:", sum(cut_final)
+print "Passed cross:", sum(cut_cross)

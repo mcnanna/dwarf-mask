@@ -236,7 +236,7 @@ def signal_table():
         cut_duplicates.append(galaxy[0] not in galaxy_names)
         galaxy_names.append(galaxy[0])
     
-    t.add_data((np.array(signal, dtype=object)[np.array(cut_duplicates)]).T)
+    t.add_data((np.array(signal, dtype=object)[np.array(cut_duplicates)]).T, sigfigs = [0, 3, 3, 2, 0])
     t.print_table('tables/signal_{}_{}.tex'.format(args.survey, args.alg))
     subprocess.call("pdflatex -output-directory tables tables/signal_{}_{}.tex".format(args.survey, args.alg).split())
     
@@ -277,7 +277,8 @@ ax.hist(d[SIG][cut_bulk & cut_dwarfs], bins=bins, color='purple', histtype='step
 ax.hist(d[SIG][cut_bulk & cut_dwarfs & cut_cross], bins=bins, color='darkturquoise', histtype='step', cumulative=-1, label='above & found by both algorithms') 
 handles, labels = ax.get_legend_handles_labels()
 new_handles = [Line2D([], [], c=h.get_edgecolor()) for h in handles]
-pylab.legend(loc='upper right', handles=new_handles, labels=labels)
+pylab.legend(loc='upper right', handles=new_handles, labels=labels, prop={'size':8})
+pylab.title('Candidate dwarf galaxies ({}, {})'.format('Pan-STARRS' if args.survey == 'ps1' else 'DES', args.alg))
 pylab.xlabel(SIG)
 pylab.ylabel('Cumulative Counts')
 pylab.savefig('diagnostic_plots/significance_distribution_{}_{}.png'.format(args.survey, args.alg), bbox_inches='tight')

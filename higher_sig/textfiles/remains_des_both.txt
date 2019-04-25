@@ -1,2 +1,0 @@
-                name        TS       SIG        ra       dec   mod_ugali  mod_simple    angsep
-        J0142.3-3015     92.91      7.28     25.57    -30.26       16.50       16.50      0.06

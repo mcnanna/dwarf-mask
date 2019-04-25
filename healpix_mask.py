@@ -112,6 +112,11 @@ if 'ps1' == args.survey:
     ps1_cut = healpy.ring2nest(NSIDE, ps1_cut)
     healpix_mask[ps1_cut] |= 0b10000
 
+    failures = pyfits.open('ugali_failures.fits')[1].data # NSIDE = 256
+    fail_pix_256 = [ugali.utils.healpix.angToPix(256, fail['ra'], fail['dec'], nest=NEST) for fail in failures]
+    fail_pix = ugali.utils.healpix.ud_grade_ipix(fail_pix_256, 256, NSIDE, nest=NEST)
+    healpix_mask[fail_pix] |= 0b100000
+
 
 pylab.figure()
 healpy.mollview(healpix_mask, nest=True, coord='C', cmap='binary')

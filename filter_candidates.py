@@ -135,12 +135,12 @@ for known_dwarf_catalog in ['McConnachie15', 'ExtraDwarfs']:
             bit = mask[pix[match_candidate[index]]]
             wascut = '' if cut_bulk[match_candidate[index]] else 'cut'
         else:
-            sig = 0.
-            a = 0.
-            modulus= 0.
+            sig = np.nan
+            a = np.nan
+            modulus= np.nan
             bit = mask[ugali.utils.healpix.angToPix(4096, known_dwarfs.data['ra'][ii], known_dwarfs.data['dec'][ii], nest=True)]
             wascut = ''
-        if not (bit & 0b10000): # Don't bother writing results for things outside the footprint
+        if (not (bit & 0b10000)) or (not np.isnan(sig)): # Don't bother writing results for non-detections outside of the footprint
             name = known_dwarfs.data['name'][ii]
             if (len(signal) == 0) or (name not in np.array(signal)[:, 0]): # Try to avoid duplicates from the mutliple catalogs
                 signal.append((known_dwarfs.data['name'][ii], sig, modulus, a, wascut, bit))
@@ -187,15 +187,14 @@ if not args.no_cross:
     matches = d[cut_final][match1]
     cut_cross = np.array([d[i]['ra'] in matches['ra'] for i in range(len(d))])
 
-
-    # Remains
-    if args.alg == 'ugali': # This 'if' is just so that it only writes this file once, although writing it twice isn't a big deal
+    if args.alg == 'ugali': # This 'if' is just so that it only writes these files once, although writing them twice isn't a big deal
+        # Remains
         uga = d[cut_final][match1]
         sim = d2[match2]
 
         dtype=[('name','|S12'),('TS',float),('sig',float),('ra',float),('dec',float),('mod_ugali',float),('mod_simple',float),('angsep',float)]
         both = np.array([(uga['name'][i], uga['TS'][i], sim['sig'][i], uga['ra'][i], uga['dec'][i], uga['modulus'][i], sim['modulus'][i], angseps[i]) for i in range(len(angseps))], dtype=dtype)
-        both = np.sort(both, order='TS')[::-1]
+        both = np.sort(both, order=['TS','sig'])[::-1]
         pyfits.writeto('fits_files/remains_{}_both.fits'.format(args.survey), both, overwrite=True)
 
         justs = 'lccccccc'
@@ -213,11 +212,11 @@ if not args.no_cross:
         if len(uga) >= len(sim):
             s1, s2 = uga, sim
             uga1 = True
-            sortkey = 'TS'
+            sortkey = ['TS', 'sig']
         else:
             s1, s2 = sim, uga
             uga1 = False
-            sortkey = 'sig'
+            sortkey = ['sig', 'TS']
 
         combined_signal = []
         # This for loop has to be done because sometimes the signal arrays aren't the same length

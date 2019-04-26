@@ -209,35 +209,22 @@ if not args.no_cross:
         # Signal
         uga = signal
         sim = signal2
-        if len(uga) >= len(sim):
-            s1, s2 = uga, sim
-            uga1 = True
-            sortkey = ['TS', 'sig']
-        else:
-            s1, s2 = sim, uga
-            uga1 = False
-            sortkey = ['sig', 'TS']
-
         combined_signal = []
-        # This for loop has to be done because sometimes the signal arrays aren't the same length
-        for i in range(len(s1)):
-            name = s1[i]['name']
-            for j in range(len(s2)):
-                if s2[j]['name'] == name:
-                    if uga1:
-                        combined_signal.append((name, uga['TS'][i], sim['sig'][j], uga['modulus'][i], sim['modulus'][j], uga['angsep'][i], sim['angsep'][j]))
-                        break
-                    else:
-                        combined_signal.append((name, uga['TS'][j], sim['sig'][i], uga['modulus'][j], sim['modulus'][i], uga['angsep'][j], sim['angsep'][i]))
-                        break
+        for i in range(len(uga)):
+            name = uga[i]['name']
+            for j in range(len(sim)):
+                if sim[j]['name'] == name:
+                    combined_signal.append((name, uga['TS'][i], sim['sig'][j], uga['modulus'][i], sim['modulus'][j], uga['angsep'][i], sim['angsep'][j]))
+                    sim = np.delete(sim, j)
+                    break
             else:
-                if uga1:
-                    combined_signal.append((name, s1['TS'][i], 0.0, s1['modulus'][i], 0.0, s1['angsep'][i], 0.0))
-                else:
-                    combined_signal.append((name, 0.0, s1['sig'][i], 0.0, s1['modulus'][i], 0.0, s1['angsep'][i]))
-                
+                combined_signal.append((name, uga['TS'][i], np.nan, uga['modulus'][i], np.nan, uga['angsep'][i], np.nan))
+
+        for j in range(len(sim)):
+                combined_signal.append((sim['name'][j], np.nan, sim['sig'][j], np.nan, sim['modulus'][j], np.nan, sim['angsep'][j]))
+        
         dtype=[('name','|S18'),('TS',float),('sig',float),('mod_ugali',float),('mod_simple',float),('angsep_ugali',float),('angsep_simple',float)]
-        combined_signal = np.sort(np.array(combined_signal, dtype=dtype), order=sortkey)[::-1]
+        combined_signal = np.sort(np.array(combined_signal, dtype=dtype), order=['TS', 'sig'])[::-1]
         pyfits.writeto('fits_files/signal_{}_both.fits'.format(args.survey), combined_signal, overwrite=True)
         
         justs = 'lcccccc'

@@ -389,8 +389,9 @@ class ExtraDwarfs(SourceCatalog):
         self.data['ra'] = raw['ra']
         self.data['dec'] = raw['dec']
 
-        self.data['glon'],self.data['glat'] = cel2gal(raw['ra'],raw['dec'])
+        self.data['radius'] = raw['rhalf']/60.0 # Half-light radius, arcmin
 
+        self.data['glon'],self.data['glat'] = cel2gal(raw['ra'],raw['dec'])
 
 class ExtraClusters(SourceCatalog):
     """
@@ -412,9 +413,29 @@ class ExtraClusters(SourceCatalog):
         self.data['ra'] = raw['ra']
         self.data['dec'] = raw['dec']
 
+        self.data['radius'] = raw['rhalf']/60.0 # Half-light radius, arcmin
+
         self.data['glon'],self.data['glat'] = cel2gal(raw['ra'],raw['dec'])
 
-    
+class ExtraStructures(SourceCatalog):
+    """
+    Collection of recently discovered structures
+    """
+    def _load(self,filename):
+        kwargs = dict(delimiter=',')
+        if filename is None: 
+            filename = os.path.join(self.DATADIR,"extras/extra_structures.csv")
+        self.filename = filename
+        raw = np.recfromcsv(filename,**kwargs)
+        
+        self.data.resize(len(raw))
+        self.data['name'] = raw['name']
+        
+        self.data['ra'] = raw['ra']
+        self.data['dec'] = raw['dec']
+
+        self.data['glon'],self.data['glat'] = cel2gal(raw['ra'],raw['dec'])
+
 
 def catalogFactory(name, **kwargs):
     """

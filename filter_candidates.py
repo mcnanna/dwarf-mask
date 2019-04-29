@@ -27,6 +27,7 @@ if 'u' in args.alg:
     args.alg = 'ugali'
 elif 's' in args.alg:
     args.alg = 'simple'
+typeset = True
 
 subprocess.call('mkdir -p fits_files tables diagnostic_plots'.split())
 
@@ -115,7 +116,8 @@ t.add_header_row(header_row2)
 data = np.sort(d[cut_final], order=SIG)[::-1]
 t.add_data([data[header] for header in data_headers], sigfigs=sigfigs)
 t.print_table('tables/remains_{}_{}.tex'.format(args.survey, args.alg))
-subprocess.call("pdflatex -output-directory tables tables/remains_{}_{}.tex".format(args.survey, args.alg).split())
+if typeset:
+    subprocess.call("pdflatex -output-directory tables tables/remains_{}_{}.tex".format(args.survey, args.alg).split())
 
 
 ### Signal Detection
@@ -124,26 +126,31 @@ subprocess.call("pdflatex -output-directory tables tables/remains_{}_{}.tex".for
 signal = []
 for known_dwarf_catalog in ['McConnachie15', 'ExtraDwarfs']:
     known_dwarfs = associate.catalogFactory(known_dwarf_catalog)
-    match_candidate, match_known_dwarfs, angsep = known_dwarfs.match(d['RA'], d['DEC'], coord='cel', tol=0.2)
+    for known_dwarf in known_dwarfs:
+        tol = known_dwarf['radius']
+        if np.isnan(tol) or tol < 0.2:
+            tol = 0.2
+        match_candidate, match_known_dwarf, angseps = ugali.utils.projector.match(d['RA'], d['DEC'], [known_dwarf['ra']], [known_dwarf['dec']], tol=tol)
 
-    for ii in range(0, len(known_dwarfs.data)):
-        if ii in match_known_dwarfs:
-            index = np.argmin(np.fabs(ii - match_known_dwarfs))
-            sig = d[SIG][match_candidate[index]]
-            a = angsep[index]
-            modulus = d['MODULUS'][match_candidate[index]]
-            bit = mask[pix[match_candidate[index]]]
-            wascut = '' if cut_bulk[match_candidate[index]] else 'cut'
+        if len(match_known_dwarf) > 0:
+            # print highest significance match (Usually only 1 match. Exceptions: LMC, Sagittarius dSph, Crater II (simple only))
+            mx = np.argmax(d[match_candidate][SIG])
+            idx = match_candidate[mx]
+            sig = d[SIG][idx]
+            a = angseps[0]
+            modulus = d['MODULUS'][idx]
+            bit = mask[pix[idx]]
+            wascut = '' if cut_bulk[idx] else 'cut'
         else:
             sig = np.nan
             a = np.nan
-            modulus= np.nan
-            bit = mask[ugali.utils.healpix.angToPix(4096, known_dwarfs.data['ra'][ii], known_dwarfs.data['dec'][ii], nest=True)]
+            modulus = np.nan
+            bit = mask[ugali.utils.healpix.angToPix(4096, known_dwarf['ra'], known_dwarf['dec'], nest=True)]
             wascut = ''
         if (not (bit & 0b10000)) or (not np.isnan(sig)): # Don't bother writing results for non-detections outside of the footprint
-            name = known_dwarfs.data['name'][ii]
-            if (len(signal) == 0) or (name not in np.array(signal)[:, 0]): # Try to avoid duplicates from the mutliple catalogs
-                signal.append((known_dwarfs.data['name'][ii], sig, modulus, a, wascut, bit))
+            name = known_dwarf['name']
+            if (len(signal) == 0) or (name not in np.array(signal)[:, 0]): # Try to avoid duplicates from the multiple catalogs
+                signal.append((name, sig, modulus, a, wascut, bit))
 
 dtype = [('name','|S18'),(SIG, float),('modulus',float),('angsep',float),('cut','|S3'),('bit',int)]
 signal = np.array(signal, dtype=dtype)
@@ -156,7 +163,8 @@ t.add_header_row(['','','','(deg)', ''])
 sigfigs=[0, 3, 3, 2, 0]
 t.add_data([signal[header] for header in signal.dtype.names[:-1]], sigfigs=sigfigs)
 t.print_table('tables/signal_{}_{}.tex'.format(args.survey, args.alg))
-subprocess.call("pdflatex -output-directory tables tables/signal_{}_{}.tex".format(args.survey, args.alg).split())
+if typeset:
+    subprocess.call("pdflatex -output-directory tables tables/signal_{}_{}.tex".format(args.survey, args.alg).split())
 
 
 ### Combine results of two algorithsm
@@ -185,7 +193,7 @@ if not args.no_cross:
 
     match1, match2, angseps = ugali.utils.projector.match(d['ra'][cut_final], d['dec'][cut_final], d2['ra'], d2['dec'], tol=0.2)
     matches = d[cut_final][match1]
-    cut_cross = np.array([d[i]['ra'] in matches['ra'] for i in range(len(d))])
+    cut_cross = np.array([(d[i]['ra'], d[i]['dec']) in zip(matches['ra'], matches['dec']) for i in range(len(d))])
 
     if args.alg == 'ugali': # This 'if' is just so that it only writes these files once, although writing them twice isn't a big deal
         # Remains
@@ -204,7 +212,8 @@ if not args.no_cross:
         sigfigs = [0, 3, 3, 5, 4, 3, 3, 2]
         t.add_data([both[header] for header in both.dtype.names], sigfigs=sigfigs)
         t.print_table('tables/remains_{}_both.tex'.format(args.survey))
-        subprocess.call("pdflatex -output-directory tables tables/remains_{}_both.tex".format(args.survey).split())
+        if typeset:
+            subprocess.call("pdflatex -output-directory tables tables/remains_{}_both.tex".format(args.survey).split())
 
         # Signal
         uga = signal
@@ -234,10 +243,17 @@ if not args.no_cross:
         sigfigs = [0, 3, 3, 5, 4, 3, 3, 2, 2]
         t.add_data([combined_signal[header] for header in combined_signal.dtype.names], sigfigs=sigfigs)
         t.print_table('tables/signal_{}_both.tex'.format(args.survey))
-        subprocess.call("pdflatex -output-directory tables tables/signal_{}_both.tex".format(args.survey).split())
+        if typeset:
+            subprocess.call("pdflatex -output-directory tables tables/signal_{}_both.tex".format(args.survey).split())
 
     if args.no_fitsfile:
         raise SystemExit(0)
+
+#print "Passed cuts:", sum(cut_bulk & cut_dwarfs)
+#print "Passed sig:", sum(cut_sig)
+#print "Passed final:", sum(cut_final)
+#if not args.no_cross:
+#    print "Passed cross:", sum(cut_cross)
 
 
 # If a known satellite matches something in another catalog (you can tell from the bit), use this to find out what it's matching
@@ -245,7 +261,7 @@ def what_matches(name, known_dwarf_catalog='McConnachie15'):
     known_dwarfs = associate.catalogFactory(known_dwarf_catalog)
     obj = known_dwarfs[known_dwarfs['name'] == name]
     ra, dec = obj['ra'], obj['dec']
-    external_cat_list = ['Harris96', 'Corwen04', 'Nilson73', 'Webbink85', 'Kharchenko13', 'Bica08', 'WEBDA14', 'ExtraClusters', 'McConnachie15', 'ExtraDwarfs']
+    external_cat_list = ['Harris96', 'Corwen04', 'Nilson73', 'Webbink85', 'Kharchenko13', 'Bica08', 'WEBDA14', 'ExtraClusters', 'McConnachie15', 'ExtraDwarfs', 'ExtraStructures']
     print '%15s%20s%10s%10s'%('catalog', 'name', 'radius', 'angsep')
     for cat in external_cat_list:
         catalog = associate.catalogFactory(cat)
@@ -263,7 +279,7 @@ ax = fig.add_subplot(111)
 if args.alg == 'simple':
     bins = np.arange(5., 40.25, 0.5)
 elif args.alg == 'ugali':
-    bins = np.logspace(np.log10(25.), np.log10(200000.), num=70)
+    bins = np.logspace(np.log10(10.), np.log10(200000.), num=70)
     pylab.xscale('log')
 pylab.yscale('log')
 ax.hist(d[SIG], bins=bins, color='red', histtype='step', cumulative=-1, label='All')
@@ -307,8 +323,4 @@ pylab.ylabel('Count')
 pylab.title('Unassociated Hotspots')
 pylab.savefig('diagnostic_plots/modulus_distribution_{}_{}.png'.format(args.survey, args.alg), bbox_inches='tight')
 
-print "Passed cuts:", sum(cut_bulk & cut_dwarfs)
-print "Passed sig:", sum(cut_sig)
-print "Passed final:", sum(cut_final)
-if not args.no_cross:
-    print "Passed cross:", sum(cut_cross)
+

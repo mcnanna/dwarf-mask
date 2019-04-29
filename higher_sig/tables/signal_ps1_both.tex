@@ -1,5 +1,12 @@
 \documentclass[twocolumns,tighten]{aastex61}
 \begin{document}
+
+\newcommand{\tablenotes}{
+\tablenotetext{a}{Cut from ugali results due to distance modulus cut.}
+\tablenotetext{b}{Cut from simple results due to distance modulus cut.}
+\tablenotetext{c}{Cut from ugali results due to location on Pan-STARRS footprint ($\delta < -25.0$).}
+}
+
 \begin{deluxetable*}{lcccccc}
 \tablewidth{0pc}
 \tablecolumns{7}
@@ -7,39 +14,39 @@
 \colhead{Name} & \colhead{TS} & \colhead{SIG} & \colhead{$m - M$} & \colhead{$m - M$} & \colhead{Ang. Sep.} & \colhead{Ang. Sep.} \\
  \colhead{} & \colhead{(ugali)} & \colhead{(simple)} & \colhead{(ugali)} & \colhead{(simple)} & \colhead{(deg, ugali)} & \colhead{(deg, simple)}  }
 \startdata
-Triangulum & 60600 & 37.5 & 17.000 & 21.50 & 0.00424 & 0.109\\
-Leo I & 24800 & \ldots & 22.500 & \ldots & 0.00506 & \ldots\\
-Leo II & 10800 & \ldots & 22.000 & \ldots & 0.00780 & \ldots\\
+Leo I\tablenotemark{a} & 24800 & \ldots & 22.500 & \ldots & 0.00505 & \ldots\\
+Leo II\tablenotemark{a}  & 10800 & \ldots & 22.000 & \ldots & 0.00781 & \ldots\\
 Draco & 8530 & 37.5 & 20.000 & 19.50 & 0.00764 & 0.00551\\
 Ursa Minor & 5220 & 37.5 & 19.500 & 19.00 & 0.0335 & 0.0455\\
-Sextans (I) & 2010 & 24.6 & 20.000 & 20.00 & 0.00344 & 0.0204\\
-Canes Venatici (I) & 1300 & 25.3 & 21.500 & 21.50 & 0.00750 & 0.00969\\
-Bootes (I) & 509 & 11.6 & 19.000 & 19.00 & 0.00329 & 0.0840\\
-Cetus & 471 & 9.15 & 23.000 & 22.00 & 0.00198 & 0.0166\\
+Sextans (I) & 2010 & 24.6 & 20.000 & 20.00 & 0.00343 & 0.0204\\
+Canes Venatici (I) & 1300 & 25.3 & 21.500 & 21.50 & 0.00754 & 0.00969\\
+Bootes (I) & 509 & 11.6 & 19.000 & 19.00 & 0.00328 & 0.0840\\
+Cetus\tablenotemark{a}\tablenotemark{b}  & 471 & 9.15 & 23.000 & 22.00 & 0.00198 & 0.0166\\
 Ursa Major II & 245 & 8.86 & 18.000 & 18.50 & 0.0159 & 0.0150\\
-Coma Berenices & 234 & 9.75 & 18.500 & 17.50 & 0.0106 & 0.0148\\
-Willman 1 & 203 & 12.5 & 18.000 & 18.00 & 0.0176 & 0.0130\\
+Coma Berenices & 234 & 9.75 & 18.500 & 17.50 & 0.0107 & 0.0148\\
 Sagittarius II & 136 & 11.7 & 19.000 & 20.00 & 0.0136 & 0.00677\\
-Segue (I) & 116 & 8.55 & 17.000 & 16.50 & 0.00945 & 0.00809\\
-Segue II & 116 & 7.25 & 18.000 & 19.00 & 0.0221 & 0.0209\\
-Canes Venatici II & 109 & 8.78 & 21.000 & 21.00 & 0.00212 & 0.00683\\
-Draco II & 95.3 & 7.90 & 17.000 & 17.50 & 0.00980 & 0.00911\\
+Segue (I) & 116 & 8.55 & 17.000 & 16.50 & 0.00944 & 0.00810\\
+Segue II & 116 & 7.25 & 18.000 & 19.00 & 0.0222 & 0.0209\\
+Canes Venatici II & 109 & 8.78 & 21.000 & 21.00 & 0.00211 & 0.00685\\
+Draco II & 95.3 & 7.90 & 17.000 & 17.50 & 0.00980 & 0.00913\\
 Triangulum II & 89.6 & 6.76 & 17.000 & 17.50 & 0.00935 & 0.0110\\
 Ursa Major (I) & 88.5 & 5.99 & 20.000 & 20.50 & 0.0614 & 0.0485\\
 Hercules & 82.9 & 6.44 & 21.000 & 19.00 & 0.0162 & 0.0285\\
-Leo IV & 62.5 & 4.94 & 21.000 & 22.00 & 0.0176 & 0.0340\\
+Crater II & 63.7 & 6.08 & 20.500 & 20.00 & 0.224 & 0.191\\
+Leo IV\tablenotemark{b} & 62.5 & 4.94 & 21.000 & 22.00 & 0.0176 & 0.0340\\
 Aquarius II & 52.9 & 5.07 & 20.000 & 21.50 & 0.0162 & 0.0418\\
 Cetus II & 47.6 & 6.14 & 16.000 & 17.50 & 0.0442 & 0.115\\
 Bootes II & 33.6 & 6.46 & 18.500 & 18.50 & 0.0249 & 0.0286\\
 Leo V & 29.7 & \ldots & 21.500 & \ldots & 0.00981 & \ldots\\
-Columba I & 28.4 & 5.34 & 21.500 & 22.00 & 0.00310 & 0.00530\\
-Crater II & \ldots & 6.08 & \ldots & 20.00 & \ldots & 0.191\\
-Pisces II & \ldots & 4.39 & \ldots & 21.00 & \ldots & 0.0445\\
+Columba I\tablenotemark{b}\tablenotemark{c} & 28.4 & 5.34 & 21.500 & 22.00 & 0.00305 & 0.00530\\
+Pisces II & 22.8 & 4.39 & 21.500 & 21.00 & 0.0109 & 0.0445\\
+Antlia & 10.9 & \ldots & 18.500 & \ldots & 0.0883 & \ldots\\
 Aquarius & \ldots & 4.34 & \ldots & 20.50 & \ldots & 0.174\\
 Virgo I & \ldots & 4.08 & \ldots & 17.00 & \ldots & 0.141\\
 Pegasus III & \ldots & \ldots & \ldots & \ldots & \ldots & \ldots\\
 Cetus III & \ldots & \ldots & \ldots & \ldots & \ldots & \ldots\\
 Bootes III & \ldots & \ldots & \ldots & \ldots & \ldots & \ldots\\
 \enddata
+\tablenotes
 \end{deluxetable*}
 \end{document}

@@ -59,7 +59,7 @@ def cut_circles(ras, decs, radii=None, default_radius=0.1, min_radius=0.05):
 
 
 """
-McConnachie12: Half-light radius along major axis. Could incorporate ellipticity info
+McConnachie15: Half-light radius along major axis. Could incorporate ellipticity info
 Harris96: Half-light radius
 Corwen04: No radius data
 Nilson73: Major axis (no ellipticity info)
@@ -67,11 +67,13 @@ Webbink85: 10**log(radius)
 Kharchenko13: Radius of the central part
 Bica08: Major axis. Could incorporate ellipticity info
 WEBDA: Diameter/2
+ExtraDwarfs: Half-light radius
+ExtraClusters: Half-light radius
 
-Vizier data on: McConnachie12, Nilson73, Webbink85 (should check log or ln), Kharchenko13 (3 radii, used middle), Bica08
-ugali data on: Harris96, WEBDA14
+Vizier data on: Nilson73, Webbink85 (should check log or ln), Kharchenko13 (3 radii, used middle), Bica08
+ugali data on: McConnachi15, Harris96, WEBDA14
 """
-external_cat_list = ['Harris96', 'Corwen04', 'Nilson73', 'Webbink85', 'Kharchenko13', 'Bica08', 'WEBDA14', 'ExtraClusters']
+external_cat_list = ['Harris96', 'Corwen04', 'Nilson73', 'Webbink85', 'Kharchenko13', 'Bica08', 'WEBDA14', 'ExtraClusters', 'ExtraStructures']
 for external_cat in external_cat_list:
     if args.mode == 1:
         catalog = ugali.candidate.associate.catalogFactory(external_cat)

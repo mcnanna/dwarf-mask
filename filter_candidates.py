@@ -133,7 +133,7 @@ for known_dwarf_catalog in ['McConnachie15', 'ExtraDwarfs']:
         match_candidate, match_known_dwarf, angseps = ugali.utils.projector.match(d['RA'], d['DEC'], [known_dwarf['ra']], [known_dwarf['dec']], tol=tol)
 
         if len(match_known_dwarf) > 0:
-            # print highest significance match (Usually only 1 match. Exceptions: LMC, Sagittarius dSph, Crater II (simple only))
+            # print highest significance match (Usually only 1 match. Exceptions: LMC, Sagittarius dSph, Bootes III, Crater II (simple only))
             mx = np.argmax(d[match_candidate][SIG])
             idx = match_candidate[mx]
             sig = d[SIG][idx]
@@ -240,7 +240,7 @@ if not args.no_cross:
         t = TexTable(len(justs), justs=justs, comments='', caption='')
         t.add_header_row(['Name', 'TS', 'SIG', r"$m - M$", r"$m - M$", "Ang. Sep.", "Ang. Sep."])
         t.add_header_row(['', '(ugali)', '(simple)', '(ugali)', '(simple)', '(deg, ugali)', '(deg, simple)'])
-        sigfigs = [0, 3, 3, 5, 4, 3, 3, 2, 2]
+        sigfigs = [0, 3, 3, 3, 3, 2, 2]
         t.add_data([combined_signal[header] for header in combined_signal.dtype.names], sigfigs=sigfigs)
         t.print_table('tables/signal_{}_both.tex'.format(args.survey))
         if typeset:
@@ -254,7 +254,7 @@ if not args.no_cross:
 #print "Passed final:", sum(cut_final)
 #if not args.no_cross:
 #    print "Passed cross:", sum(cut_cross)
-
+#raise SystemExit(0)
 
 # If a known satellite matches something in another catalog (you can tell from the bit), use this to find out what it's matching
 def what_matches(name, known_dwarf_catalog='McConnachie15'):

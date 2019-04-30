@@ -114,6 +114,7 @@ class McConnachie15(SourceCatalog):
 
         raw[['LMC' in name for name in raw['f0']].index(True)]['f7'] = 540.0 # LMC radius = 9 deg
         raw[['SMC' in name for name in raw['f0']].index(True)]['f7'] = 180.0 # LMC radius = 3 deg
+        raw[['Bootes III' in name for name in raw['f0']].index(True)]['f7'] = 60.0 # Bootes III radius = 1 deg
 
         self.data.resize(len(raw))
         self.data['name'] = np.char.lstrip(np.char.strip(raw['f0']),'*')

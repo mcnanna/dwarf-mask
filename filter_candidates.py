@@ -27,7 +27,7 @@ if 'u' in args.alg:
     args.alg = 'ugali'
 elif 's' in args.alg:
     args.alg = 'simple'
-typeset = True
+TYPESET = True
 
 subprocess.call('mkdir -p fits_files tables diagnostic_plots'.split())
 
@@ -116,7 +116,7 @@ t.add_header_row(header_row2)
 data = np.sort(d[cut_final], order=SIG)[::-1]
 t.add_data([data[header] for header in data_headers], sigfigs=sigfigs)
 t.print_table('tables/remains_{}_{}.tex'.format(args.survey, args.alg))
-if typeset:
+if TYPESET:
     subprocess.call("pdflatex -output-directory tables tables/remains_{}_{}.tex".format(args.survey, args.alg).split())
 
 
@@ -163,7 +163,7 @@ t.add_header_row(['','','','(deg)', ''])
 sigfigs=[0, 3, 3, 2, 0]
 t.add_data([signal[header] for header in signal.dtype.names[:-1]], sigfigs=sigfigs)
 t.print_table('tables/signal_{}_{}.tex'.format(args.survey, args.alg))
-if typeset:
+if TYPESET:
     subprocess.call("pdflatex -output-directory tables tables/signal_{}_{}.tex".format(args.survey, args.alg).split())
 
 
@@ -212,7 +212,7 @@ if not args.no_cross:
         sigfigs = [0, 3, 3, 5, 4, 3, 3, 2]
         t.add_data([both[header] for header in both.dtype.names], sigfigs=sigfigs)
         t.print_table('tables/remains_{}_both.tex'.format(args.survey))
-        if typeset:
+        if TYPESET:
             subprocess.call("pdflatex -output-directory tables tables/remains_{}_both.tex".format(args.survey).split())
 
         # Signal
@@ -243,17 +243,17 @@ if not args.no_cross:
         sigfigs = [0, 3, 3, 3, 3, 2, 2]
         t.add_data([combined_signal[header] for header in combined_signal.dtype.names], sigfigs=sigfigs)
         t.print_table('tables/signal_{}_both.tex'.format(args.survey))
-        if typeset:
+        if TYPESET:
             subprocess.call("pdflatex -output-directory tables tables/signal_{}_both.tex".format(args.survey).split())
 
     if args.no_fitsfile:
         raise SystemExit(0)
 
-#print "Passed cuts:", sum(cut_bulk & cut_dwarfs)
-#print "Passed sig:", sum(cut_sig)
-#print "Passed final:", sum(cut_final)
-#if not args.no_cross:
-#    print "Passed cross:", sum(cut_cross)
+print "Passed cuts:", sum(cut_bulk & cut_dwarfs)
+print "Passed sig:", sum(cut_sig)
+print "Passed final:", sum(cut_final)
+if not args.no_cross:
+    print "Passed cross:", sum(cut_cross)
 #raise SystemExit(0)
 
 # If a known satellite matches something in another catalog (you can tell from the bit), use this to find out what it's matching
@@ -322,5 +322,4 @@ pylab.xlabel('m-M')
 pylab.ylabel('Count')
 pylab.title('Unassociated Hotspots')
 pylab.savefig('diagnostic_plots/modulus_distribution_{}_{}.png'.format(args.survey, args.alg), bbox_inches='tight')
-
 

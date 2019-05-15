@@ -8,13 +8,16 @@ import pylab
 pylab.ion()
 from matplotlib.lines import Line2D
 import argparse
-from textable import TexTable
 
 import ugali.utils.projector
 import ugali.utils.healpix
 import associate
 
-import pdb
+TABLES = True
+if TABLES:
+    import make_nice_tables
+    subprocess.call('mkdir -p tables'.split())
+subprocess.call('mkdir -p fits_files diagnostic_plots'.split())
 
 p = argparse.ArgumentParser()
 p.add_argument('survey', help="'ps1' or 'des'")
@@ -27,9 +30,8 @@ if 'u' in args.alg:
     args.alg = 'ugali'
 elif 's' in args.alg:
     args.alg = 'simple'
-TYPESET = True
 
-subprocess.call('mkdir -p fits_files tables diagnostic_plots'.split())
+print args.survey, args.alg
 
 infile = 'candidates/candidate_list_{0}_{1}.fits'.format(args.survey, args.alg)
 r = pyfits.open(infile)
@@ -98,29 +100,13 @@ cut_final = cut_bulk & cut_dwarfs & cut_sig
 
 # Write sorted remains to .fits and make a TeX table
 pyfits.writeto('fits_files/remains_{}_{}.fits'.format(args.survey, args.alg), np.sort(d[cut_final], order=SIG)[::-1], overwrite=True)
-
-justs = 'cccc'
-header_row1 = [SIG, r"$\alpha_{2000}$", r"$\delta_{2000}$", r"$m - M$"]
-header_row2 = ['', '(deg)', '(deg)', '']
-data_headers = [SIG, 'ra', 'dec', 'modulus']
-sigfigs = [3, 5, 4, 3]
-if args.alg == 'ugali':
-    justs = 'l' + justs
-    header_row1 = ['Name'] + header_row1
-    header_row2 = [''] + header_row2
-    data_headers = ['name'] + data_headers
-    sigfigs = [0] + sigfigs
-t = TexTable(len(justs), justs=justs, comments='', caption='')
-t.add_header_row(header_row1)
-t.add_header_row(header_row2)
-data = np.sort(d[cut_final], order=SIG)[::-1]
-t.add_data([data[header] for header in data_headers], sigfigs=sigfigs)
-t.print_table('tables/remains_{}_{}.tex'.format(args.survey, args.alg))
-if TYPESET:
+if TABLES:
+    make_nice_tables.remains_table('tables/remains_{}_{}.tex'.format(args.survey, args.alg), np.sort(d[cut_final], order=SIG)[::-1], alg=args.alg)
     subprocess.call("pdflatex -output-directory tables tables/remains_{}_{}.tex".format(args.survey, args.alg).split())
 
-
 ### Signal Detection
+
+lvdb = pyfits.open('lvdb_v2.fits')[1].data
 
 # Detections of known satellites
 signal = []
@@ -128,10 +114,11 @@ for known_dwarf_catalog in ['McConnachie15', 'ExtraDwarfs']:
     known_dwarfs = associate.catalogFactory(known_dwarf_catalog)
     for known_dwarf in known_dwarfs:
         tol = known_dwarf['radius']
-        if np.isnan(tol) or tol < 0.2:
+        if np.isnan(tol) or tol < 0.2: # Minimum matching radius of 0.2
             tol = 0.2
         match_candidate, match_known_dwarf, angseps = ugali.utils.projector.match(d['RA'], d['DEC'], [known_dwarf['ra']], [known_dwarf['dec']], tol=tol)
 
+        name = known_dwarf['name']
         if len(match_known_dwarf) > 0:
             # print highest significance match (Usually only 1 match. Exceptions: LMC, Sagittarius dSph, Bootes III, Crater II (simple only))
             mx = np.argmax(d[match_candidate][SIG])
@@ -145,27 +132,34 @@ for known_dwarf_catalog in ['McConnachie15', 'ExtraDwarfs']:
             sig = np.nan
             a = np.nan
             modulus = np.nan
+            modulus_actual = np.nan
+            distance = np.nan
+            rhalf = np.nan
+            M_V = np.nan
             bit = mask[ugali.utils.healpix.angToPix(4096, known_dwarf['ra'], known_dwarf['dec'], nest=True)]
             wascut = ''
+
+        # Look for object in Local Volume Database
+        try:
+            lv = lvdb[lvdb['name'] == name][0]
+        except IndexError:
+            modulus_actual = np.nan
+            distance = np.nan
+            rhalf = np.nan
+            M_V = np.nan
+        else:
+            modulus_actual = lv['distance_modulus']
+            distance = lv['distance_kpc']
+            rhalf = lv['rhalf']
+            M_V = lv['m_v']
+
         if (not (bit & 0b10000)) or (not np.isnan(sig)): # Don't bother writing results for non-detections outside of the footprint
-            name = known_dwarf['name']
             if (len(signal) == 0) or (name not in np.array(signal)[:, 0]): # Try to avoid duplicates from the multiple catalogs
-                signal.append((name, sig, modulus, a, wascut, bit))
+                signal.append((name, sig, modulus, modulus_actual, distance, rhalf, M_V, a, wascut, bit))
 
-dtype = [('name','|S18'),(SIG, float),('modulus',float),('angsep',float),('cut','|S3'),('bit',int)]
-signal = np.array(signal, dtype=dtype)
+dtype = [('name','|S18'),(SIG, float),('modulus',float),('modulus_actual',float),('distance',float),('rhalf',float),('M_V',float),('angsep',float),('cut','|S3'),('bit',int)]
+signal = np.sort(np.array(signal, dtype=dtype), order=SIG)[::-1]
 pyfits.writeto('fits_files/signal_{}_{}.fits'.format(args.survey, args.alg), signal, overwrite=True)
-
-justs = 'lcccc'
-t = TexTable(len(justs), justs=justs, caption='', comments='')
-t.add_header_row(['Name', SIG, r'$m - M$', 'Angular Separation', ''])
-t.add_header_row(['','','','(deg)', ''])
-sigfigs=[0, 3, 3, 2, 0]
-t.add_data([signal[header] for header in signal.dtype.names[:-1]], sigfigs=sigfigs)
-t.print_table('tables/signal_{}_{}.tex'.format(args.survey, args.alg))
-if TYPESET:
-    subprocess.call("pdflatex -output-directory tables tables/signal_{}_{}.tex".format(args.survey, args.alg).split())
-
 
 ### Combine results of two algorithsm
 
@@ -204,15 +198,8 @@ if not args.no_cross:
         both = np.array([(uga['name'][i], uga['TS'][i], sim['sig'][i], uga['ra'][i], uga['dec'][i], uga['modulus'][i], sim['modulus'][i], angseps[i]) for i in range(len(angseps))], dtype=dtype)
         both = np.sort(both, order=['TS','sig'])[::-1]
         pyfits.writeto('fits_files/remains_{}_both.fits'.format(args.survey), both, overwrite=True)
-
-        justs = 'lccccccc'
-        t = TexTable(len(justs), justs=justs, comments='', caption='')
-        t.add_header_row(['Name', 'TS', 'SIG', r"$\alpha_{2000}$", r"$\delta_{2000}$", r"$m - M$", r"$m - M$", "Angular Separation"])
-        t.add_header_row(['', '(ugali)', '(simple)', '(deg)', '(deg)', '(ugali)', '(simple)', '(deg)'])
-        sigfigs = [0, 3, 3, 5, 4, 3, 3, 2]
-        t.add_data([both[header] for header in both.dtype.names], sigfigs=sigfigs)
-        t.print_table('tables/remains_{}_both.tex'.format(args.survey))
-        if TYPESET:
+        if TABLES:
+            make_nice_tables.remains_table('tables/remains_{}_both.tex'.format(args.survey), both, alg='both')
             subprocess.call("pdflatex -output-directory tables tables/remains_{}_both.tex".format(args.survey).split())
 
         # Signal
@@ -223,37 +210,30 @@ if not args.no_cross:
             name = uga[i]['name']
             for j in range(len(sim)):
                 if sim[j]['name'] == name:
-                    combined_signal.append((name, uga['TS'][i], sim['sig'][j], uga['modulus'][i], sim['modulus'][j], uga['angsep'][i], sim['angsep'][j]))
+                    combined_signal.append((name, uga['TS'][i], sim['sig'][j], uga['modulus'][i], sim['modulus'][j], uga['modulus_actual'][i], uga['distance'][i], uga['rhalf'][i], uga['M_V'][i],  uga['angsep'][i], sim['angsep'][j]))
                     sim = np.delete(sim, j)
                     break
             else:
-                combined_signal.append((name, uga['TS'][i], np.nan, uga['modulus'][i], np.nan, uga['angsep'][i], np.nan))
+                combined_signal.append((name, uga['TS'][i], np.nan, uga['modulus'][i], np.nan, uga['modulus_actual'][i], uga['distance'][i], uga['rhalf'][i], uga['M_V'][i],  uga['angsep'][i], np.nan))
 
         for j in range(len(sim)):
-                combined_signal.append((sim['name'][j], np.nan, sim['sig'][j], np.nan, sim['modulus'][j], np.nan, sim['angsep'][j]))
+                combined_signal.append((sim['name'][j], np.nan, sim['sig'][j], np.nan, sim['modulus'][j], sim['modulus_actual'][j], sim['distance'][j], sim['rhalf'][j], sim['M_V'][j], np.nan, sim['angsep'][j]))
         
-        dtype=[('name','|S18'),('TS',float),('sig',float),('mod_ugali',float),('mod_simple',float),('angsep_ugali',float),('angsep_simple',float)]
+        dtype=[('name','|S18'),('TS',float),('sig',float),('mod_ugali',float),('mod_simple',float),('mod_actual',float),('distance',float),('rhalf',float),('M_V',float),('angsep_ugali',float),('angsep_simple',float)]
         combined_signal = np.sort(np.array(combined_signal, dtype=dtype), order=['TS', 'sig'])[::-1]
         pyfits.writeto('fits_files/signal_{}_both.fits'.format(args.survey), combined_signal, overwrite=True)
-        
-        justs = 'lcccccc'
-        t = TexTable(len(justs), justs=justs, comments='', caption='')
-        t.add_header_row(['Name', 'TS', 'SIG', r"$m - M$", r"$m - M$", "Ang. Sep.", "Ang. Sep."])
-        t.add_header_row(['', '(ugali)', '(simple)', '(ugali)', '(simple)', '(deg, ugali)', '(deg, simple)'])
-        sigfigs = [0, 3, 3, 3, 3, 2, 2]
-        t.add_data([combined_signal[header] for header in combined_signal.dtype.names], sigfigs=sigfigs)
-        t.print_table('tables/signal_{}_both.tex'.format(args.survey))
-        if TYPESET:
-            subprocess.call("pdflatex -output-directory tables tables/signal_{}_both.tex".format(args.survey).split())
+        if TABLES:
+            make_nice_tables.signal_table('tables/signal_{}.tex'.format(args.survey), combined_signal)
+            subprocess.call("pdflatex -output-directory tables tables/signal_{}.tex".format(args.survey).split())
 
     if args.no_fitsfile:
         raise SystemExit(0)
 
-print "Passed cuts:", sum(cut_bulk & cut_dwarfs)
-print "Passed sig:", sum(cut_sig)
-print "Passed final:", sum(cut_final)
-if not args.no_cross:
-    print "Passed cross:", sum(cut_cross)
+#print "Passed cuts:", sum(cut_bulk & cut_dwarfs)
+#print "Passed sig:", sum(cut_sig)
+#print "Passed final:", sum(cut_final)
+#if not args.no_cross:
+#    print "Passed cross:", sum(cut_cross)
 #raise SystemExit(0)
 
 # If a known satellite matches something in another catalog (you can tell from the bit), use this to find out what it's matching

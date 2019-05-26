@@ -13,7 +13,7 @@ import ugali.utils.projector
 import ugali.utils.healpix
 import associate
 
-TABLES = True
+TABLES = False
 if TABLES:
     import make_nice_tables
     subprocess.call('mkdir -p tables'.split())
@@ -102,7 +102,7 @@ cut_final = cut_bulk & cut_dwarfs & cut_sig
 pyfits.writeto('fits_files/remains_{}_{}.fits'.format(args.survey, args.alg), np.sort(d[cut_final], order=SIG)[::-1], overwrite=True)
 if TABLES:
     make_nice_tables.remains_table('tables/remains_{}_{}.tex'.format(args.survey, args.alg), np.sort(d[cut_final], order=SIG)[::-1], alg=args.alg)
-    subprocess.call("pdflatex -output-directory tables tables/remains_{}_{}.tex".format(args.survey, args.alg).split())
+    subprocess.call("pdflatex -interaction nonstopmode -output-directory tables tables/remains_{}_{}.tex".format(args.survey, args.alg).split())
 
 ### Signal Detection
 
@@ -124,7 +124,7 @@ for known_dwarf_catalog in ['McConnachie15', 'ExtraDwarfs']:
             mx = np.argmax(d[match_candidate][SIG])
             idx = match_candidate[mx]
             sig = d[SIG][idx]
-            a = angseps[0]
+            a = angseps[0]*60.
             modulus = d['MODULUS'][idx]
             bit = mask[pix[idx]]
             wascut = '' if cut_bulk[idx] else 'cut'
@@ -195,12 +195,12 @@ if not args.no_cross:
         sim = d2[match2]
 
         dtype=[('name','|S12'),('TS',float),('sig',float),('ra',float),('dec',float),('mod_ugali',float),('mod_simple',float),('angsep',float)]
-        both = np.array([(uga['name'][i], uga['TS'][i], sim['sig'][i], uga['ra'][i], uga['dec'][i], uga['modulus'][i], sim['modulus'][i], angseps[i]) for i in range(len(angseps))], dtype=dtype)
+        both = np.array([(uga['name'][i], uga['TS'][i], sim['sig'][i], uga['ra'][i], uga['dec'][i], uga['modulus'][i], sim['modulus'][i], angseps[i]*60.) for i in range(len(angseps))], dtype=dtype)
         both = np.sort(both, order=['TS','sig'])[::-1]
         pyfits.writeto('fits_files/remains_{}_both.fits'.format(args.survey), both, overwrite=True)
         if TABLES:
             make_nice_tables.remains_table('tables/remains_{}_both.tex'.format(args.survey), both, alg='both')
-            subprocess.call("pdflatex -output-directory tables tables/remains_{}_both.tex".format(args.survey).split())
+            subprocess.call("pdflatex -interaction nonstopmode -output-directory tables tables/remains_{}_both.tex".format(args.survey).split())
 
         # Signal
         uga = signal
@@ -224,7 +224,7 @@ if not args.no_cross:
         pyfits.writeto('fits_files/signal_{}_both.fits'.format(args.survey), combined_signal, overwrite=True)
         if TABLES:
             make_nice_tables.signal_table('tables/signal_{}.tex'.format(args.survey), combined_signal)
-            subprocess.call("pdflatex -output-directory tables tables/signal_{}.tex".format(args.survey).split())
+            subprocess.call("pdflatex -interaction nonstopmode -output-directory tables tables/signal_{}.tex".format(args.survey).split())
 
     if args.no_fitsfile:
         raise SystemExit(0)
@@ -248,13 +248,13 @@ def what_matches(name, known_dwarf_catalog='McConnachie15'):
         whocares, matches, angseps = catalog.match(ra, dec, coord='cel', tol=6.0)
         for i in range(len(matches)):
             index = matches[i]
-            angsep = angseps[i]
+            angsep = angseps[i]*60.
             radius = catalog[index]['radius']
             print '%15s%20s%10.3f%10.3f'%(cat, catalog[index]['name'], radius, angsep) 
 
 
 # Significance histogram 
-fig = pylab.figure()
+fig = pylab.figure(figsize=(6.0,5.0))
 ax = fig.add_subplot(111)
 if args.alg == 'simple':
     bins = np.arange(5., 40.25, 0.5)
@@ -263,8 +263,8 @@ elif args.alg == 'ugali':
     pylab.xscale('log')
 pylab.yscale('log')
 ax.hist(d[SIG], bins=bins, color='red', histtype='step', cumulative=-1, label='All')
-ax.hist(d[SIG][cut_ebv & cut_footprint], bins=bins, color='blue', histtype='step', cumulative=-1, label='E(B-V) < 0.2 mag & in footprint')
-ax.hist(d[SIG][cut_ebv & cut_footprint & cut_modulus], bins=bins, color='green', histtype='step', cumulative=-1, label='above & (m - M) < {}'.format(21.75 if args.survey == 'ps1' else 23.5))
+ax.hist(d[SIG][cut_ebv & cut_footprint], bins=bins, color='blue', histtype='step', cumulative=-1, label= r'$E(B-V) < 0.2$ mag & in footprint')
+ax.hist(d[SIG][cut_ebv & cut_footprint & cut_modulus], bins=bins, color='green', histtype='step', cumulative=-1, label=r'above & $m - M < {}$'.format(21.75 if args.survey == 'ps1' else 23.5))
 ax.hist(d[SIG][cut_ebv & cut_footprint & cut_modulus & cut_bsc], bins=bins, color='orange', histtype='step', cumulative=-1, label='above & no bright star assoc.') 
 ax.hist(d[SIG][cut_ebv & cut_footprint & cut_modulus & cut_associate & cut_bsc], bins=bins, color='black', histtype='step', cumulative=-1, label='above & no catalog assoc.') # = cut_bulk
 ax.hist(d[SIG][cut_bulk & cut_dwarfs], bins=bins, color='purple', histtype='step', cumulative=-1, label='above & no known dwarf assoc.')
@@ -273,7 +273,14 @@ if not args.no_cross:
 handles, labels = ax.get_legend_handles_labels()
 new_handles = [Line2D([], [], c=h.get_edgecolor()) for h in handles]
 pylab.legend(loc='upper right', handles=new_handles, labels=labels, prop={'size':8})
-pylab.title('Candidate dwarf galaxies ({}, {})'.format('Pan-STARRS' if args.survey == 'ps1' else 'DES', args.alg))
+# Place titles and other text to look good in the paper
+if args.survey == 'des':
+    pylab.title('SimpleBinner' if args.alg == 'simple' else 'Ugali', fontdict={'family': 'monospace'})
+else:
+    pylab.title(' ')
+#pylab.title('{}'.format('Pan-STARRS' if args.survey == 'ps1' else 'DES', 'SimpleBinner' if args.alg == 'simple' else 'Ugali'))
+if args.alg == 'ugali':
+    pylab.text(0.9, 0.55, args.survey.upper(), transform=ax.transAxes, horizontalalignment='left', fontsize=12, weight='bold')
 pylab.xlabel(SIG)
 pylab.ylabel('Cumulative Count')
 pylab.savefig('diagnostic_plots/significance_distribution_{}_{}.png'.format(args.survey, args.alg), bbox_inches='tight')
@@ -302,4 +309,3 @@ pylab.xlabel('m-M')
 pylab.ylabel('Count')
 pylab.title('Unassociated Hotspots')
 pylab.savefig('diagnostic_plots/modulus_distribution_{}_{}.png'.format(args.survey, args.alg), bbox_inches='tight')
-

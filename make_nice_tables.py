@@ -38,9 +38,9 @@ def signal_table(outname, *signals):
     signals = map(reduce_signal, signals)
 
     justs = 'lcccccccccc'
-    t = TexTable(len(justs), justs=justs, comments='', caption='')
+    t = TexTable(len(justs), justs=justs, comments="\\knowncomments", caption="\\knowncaption", notes="\\knownnotes", fontsize="\\tiny", doc=True)
     t.add_header_row(['Name', 'TS', 'SIG', r"$m - M$", r"$m - M$", r"$m - M$", "Distance", r"$r_h$", r"$M_V$", "Ang. Sep.", "Ang. Sep."])
-    t.add_header_row(['', '(ugali)', '(simple)', '(ugali)', '(simple)', '(acutal)', '(kpc)', "(')", '(mag)', '(deg, ugali)', '(deg, simple)'])
+    t.add_header_row(['', '(ugali)', '(simple)', '(ugali)', '(simple)', '(acutal)', '(kpc)', r"($'$)", '(mag)', r"($'$, ugali)", r'($`$, simple)'])
     sigfigs = [0, 3, 3, 3, 3, 3, 3, 2, 3, 2, 2]
     t.add_data([signals[0][header] for header in signals[0].dtype.names], sigfigs=sigfigs)
     for signal in signals[1:]:
@@ -75,11 +75,11 @@ def remains_table(outname, remains, alg='simple'):
     if alg == 'both':
         justs = 'lc' + justs + 'cc'
         header_row1 = ['Name', 'TS'] + header_row1 + [r"$m - M$", "Angular Separation"]
-        header_row2 = ['', '(ugali)', '(simple)', '(deg)', '(deg)', '(ugali)', '(simple)', '(deg)']
+        header_row2 = ['', '(ugali)', '(simple)', '(deg)', '(deg)', '(ugali)', '(simple)', r"($'$)"]
         data_headers = remains.dtype.names
         sigfigs = [0, 3] + sigfigs + [3, 2]
-
-    t = TexTable(len(justs), justs=justs, comments='', caption='')
+    
+    t = TexTable(len(justs), justs=justs, comments="\\candidatecomments", caption="\\candidatecaption", notes="\\knownnotes", fontsize="\\tiny", doc=True)
     t.add_header_row(header_row1)
     t.add_header_row(header_row2)
     t.add_data([remains[header] for header in data_headers], sigfigs=sigfigs)

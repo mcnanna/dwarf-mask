@@ -33,14 +33,14 @@ def signal_table(outname, *signals):
                 cut.append(noint)
         cut = np.array(cut)
 
-        return np.sort(signal[cut], order = ['TS','sig'])[::-1] # Sorting may be redundant with how the list is orignally sorted
+        return np.sort(signal[cut], order = ['TS','SIG'])[::-1] # Sorting may be redundant with how the list is orignally sorted
                 
     signals = map(reduce_signal, signals)
 
     justs = 'lcccccccccc'
     t = TexTable(len(justs), justs=justs, comments="\\knowncomments", caption="\\knowncaption", notes="\\knownnotes", fontsize="\\tiny", doc=True)
     t.add_header_row(['Name', 'TS', 'SIG', r"$m - M$", r"$m - M$", r"$m - M$", "Distance", r"$r_h$", r"$M_V$", "Ang. Sep.", "Ang. Sep."])
-    t.add_header_row(['', '(ugali)', '(simple)', '(ugali)', '(simple)', '(acutal)', '(kpc)', r"($'$)", '(mag)', r"($'$, ugali)", r'($`$, simple)'])
+    t.add_header_row(['', '(ugali)', '(simple)', '(ugali)', '(simple)', '(acutal)', '(kpc)', r"($'$)", '(mag)', r"($'$, ugali)", r"($'$, simple)"])
     sigfigs = [0, 3, 3, 3, 3, 3, 3, 2, 3, 2, 2]
     t.add_data([signals[0][header] for header in signals[0].dtype.names], sigfigs=sigfigs)
     for signal in signals[1:]:
@@ -57,7 +57,7 @@ def signal_table(outname, *signals):
 
 
 def remains_table(outname, remains, alg='simple'):
-    SIG = 'TS' if alg == 'ugali' else 'sig'
+    SIG = 'TS' if alg == 'ugali' else 'SIG'
 
     justs = 'cccc'
     header_row1 = [SIG, r"$\alpha_{2000}$", r"$\delta_{2000}$", r"$m - M$"]

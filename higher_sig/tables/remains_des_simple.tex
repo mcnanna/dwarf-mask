@@ -1,10 +1,12 @@
 \documentclass[twocolumns,tighten]{aastex61}
 \begin{document}
 \begin{deluxetable*}{cccc}
+\tabletypesize{\tiny}
 \tablewidth{0pc}
 \tablecolumns{4}
+\tablecaption{\candidatecaption}
 \tablehead{
-\colhead{sig} & \colhead{$\alpha_{2000}$} & \colhead{$\delta_{2000}$} & \colhead{$m - M$} \\
+\colhead{SIG} & \colhead{$\alpha_{2000}$} & \colhead{$\delta_{2000}$} & \colhead{$m - M$} \\
  \colhead{} & \colhead{(deg)} & \colhead{(deg)} & \colhead{}  }
 \startdata
 8.63 & 27.698 & -10.22 & 18.0\\
@@ -21,5 +23,6 @@
 7.17 & 48.635 & -25.43 & 16.0\\
 7.12 & 37.112 & -9.814 & 16.0\\
 \enddata
-\end{deluxetable*}
+{\footnotesize \tablecomments{\candidatecomments}}
+\knownnotes\end{deluxetable*}
 \end{document}

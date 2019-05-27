@@ -1,8 +1,10 @@
 \documentclass[twocolumns,tighten]{aastex61}
 \begin{document}
 \begin{deluxetable*}{lcccc}
+\tabletypesize{\tiny}
 \tablewidth{0pc}
 \tablecolumns{5}
+\tablecaption{\candidatecaption}
 \tablehead{
 \colhead{Name} & \colhead{TS} & \colhead{$\alpha_{2000}$} & \colhead{$\delta_{2000}$} & \colhead{$m - M$} \\
  \colhead{} & \colhead{} & \colhead{(deg)} & \colhead{(deg)} & \colhead{}  }
@@ -56,5 +58,6 @@ J2247.1-5119 & 30.2 & 341.78 & -51.33 & 23.0\\
 J0200.8-5227 & 30.1 & 30.200 & -52.45 & 23.0\\
 J0159.4-0550 & 30.0 & 29.850 & -5.848 & 16.5\\
 \enddata
-\end{deluxetable*}
+{\footnotesize \tablecomments{\candidatecomments}}
+\knownnotes\end{deluxetable*}
 \end{document}

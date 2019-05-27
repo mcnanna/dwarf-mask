@@ -1,3 +1,5 @@
+This is hopelessly out of date. I'll update it eventually. In the meantime, just concact me if you want to know how to use the code.
+
 # dwarf-mask
 Masking and candidate filtering for dwarf searches in PS1 and DES. 
 Creates two masks, one for DES and one for PS1.

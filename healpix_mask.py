@@ -4,12 +4,14 @@ import numpy as np
 import healpy
 import astropy.io.fits as pyfits
 import pylab
+pylab.ion()
 import argparse
 
 import ugali.utils.projector
 import ugali.utils.healpix
 import ugali.candidate.associate
 import associate
+from plot_utils import discrete_cmap
 
 p = argparse.ArgumentParser()
 p.add_argument('survey', help="des, ps1, or gen, short for general. Default: gen")
@@ -22,6 +24,7 @@ if args.survey not in ['des', 'ps1', 'gen']:
 NEST=True
 NSIDE=4096
 
+print("Creating mask with NSIDE={} and NEST={}...".format(NSIDE, NEST))
 
 # Initiate_mask
 if args.load is not None:
@@ -120,10 +123,36 @@ if 'ps1' == args.survey:
     healpix_mask[fail_pix] |= 0b100000
 
 
-pylab.figure()
-healpy.mollview(healpix_mask, nest=True, coord='C', cmap='binary')
+print("Simplifying mask for plotting...")
+simplified_mask = np.copy(healpix_mask)
+cut_catalog = np.where((simplified_mask & 0b00010) | (simplified_mask & 0b00100) | (simplified_mask & 0b01000))
+cut_ebv = np.where(simplified_mask & 0b00001)
+cut_footprint = np.where((simplified_mask & 0b10000) | (simplified_mask & 0b100000))
+simplified_mask[cut_catalog] = 1
+simplified_mask[cut_ebv] = 2
+simplified_mask[cut_footprint] = 3
+
+n = 4
+title = ''
+if args.survey == 'des':
+    title = 'DES ' + title
+elif args.survey == 'ps1':
+    title = 'Pan-STARRS ' + title
+# Custom color map, based on 'ocean'
+base = pylab.cm.get_cmap('ocean_r')
+cmap = base(np.linspace(0,1,n))
+cl = base(np.linspace(0,1,n))
+color_list = [cl[0], cl[3], cl[1], cl[2]] # Swap green before the blues
+color_list[3] = np.array([0., 0, 0.25, 1.]) # Make the dark blue darker
+new_cmap = base.from_list('new_cmap', color_list, n)
+healpy.mollview(simplified_mask, nest=True, coord='C', cmap=new_cmap, title=title, xsize=1600)
+ax = pylab.gca()
+cbar = ax.images[-1].colorbar
+cbar.set_ticks( (np.arange(n) + 0.5)*(n-1)/n )
+cbar.set_ticklabels(['Unmasked', 'Association', r'$E(B-V)$', 'Footprint'])
+healpy.graticule()
 pylab.savefig('healpix_mask_{}.png'.format(args.survey), bbox_inches='tight')
 
-print('Writing map to healpix_mask_{}.fits.gz ...'.format(args.survey))
+print('Writing mask to healpix_mask_{}.fits.gz ...'.format(args.survey))
 healpy.write_map('healpix_mask_{}.fits.gz'.format(args.survey), healpix_mask, dtype=np.int32, nest=NEST, coord='C', overwrite=True)
 

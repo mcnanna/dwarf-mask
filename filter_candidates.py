@@ -2,7 +2,7 @@
 
 import subprocess
 import numpy as np
-import healpy
+import healpy as hp
 import astropy.io.fits as pyfits
 import pylab
 pylab.ion()
@@ -282,16 +282,16 @@ class Candidates:
         ebv_map = ugali.utils.healpix.read_map(infile_dust, nest=True)
 
         #pylab.figure()
-        healpy.mollview(ebv_map, xsize=1600, min=0., max=0.5, cmap='binary', title='{0} > {1} Hotspots'.format(self.SIG, self.threshold), unit='E(B-V)', nest=True)
-        healpy.graticule()
-        healpy.projscatter(self.data['RA'][self.cut_sig], self.data['DEC'][self.cut_sig], lonlat=True, c='red', marker='o', edgecolor='none', s=2, vmax=0.5)
-        healpy.projscatter(self.data['RA'][self.cut_sig & self.cut_ebv & self.cut_footprint], self.data['DEC'][self.cut_sig & self.cut_ebv & self.cut_footprint], lonlat=True, c='blue', marker='o', edgecolor='none', s=2, vmax=0.5)
-        healpy.projscatter(self.data['RA'][self.cut_sig & self.cut_ebv & self.cut_footprint & self.cut_modulus], self.data['DEC'][self.cut_sig & self.cut_ebv & self.cut_footprint & self.cut_modulus], lonlat=True, c='green', marker='o', edgecolor='none', s=2, vmax=0.5)
+        hp.mollview(ebv_map, xsize=1600, min=0., max=0.5, cmap='binary', title='{0} > {1} Hotspots'.format(self.SIG, self.threshold), unit='E(B-V)', nest=True)
+        hp.graticule()
+        hp.projscatter(self.data['RA'][self.cut_sig], self.data['DEC'][self.cut_sig], lonlat=True, c='red', marker='o', edgecolor='none', s=2, vmax=0.5)
+        hp.projscatter(self.data['RA'][self.cut_sig & self.cut_ebv & self.cut_footprint], self.data['DEC'][self.cut_sig & self.cut_ebv & self.cut_footprint], lonlat=True, c='blue', marker='o', edgecolor='none', s=2, vmax=0.5)
+        hp.projscatter(self.data['RA'][self.cut_sig & self.cut_ebv & self.cut_footprint & self.cut_modulus], self.data['DEC'][self.cut_sig & self.cut_ebv & self.cut_footprint & self.cut_modulus], lonlat=True, c='green', marker='o', edgecolor='none', s=2, vmax=0.5)
         if self.cross:
-            healpy.projscatter(self.data['RA'][self.cut_final & ~self.cut_cross], self.data['DEC'][self.cut_final & ~self.cut_cross], lonlat=True, c='purple', marker='o', edgecolor='none', s=10, vmax=0.5)
-            healpy.projscatter(self.data['RA'][self.cut_final & self.cut_cross], self.data['DEC'][self.cut_final & self.cut_cross], lonlat=True, c='darkturquoise', marker='*', edgecolor='none', s=40, vmax=0.5)
+            hp.projscatter(self.data['RA'][self.cut_final & ~self.cut_cross], self.data['DEC'][self.cut_final & ~self.cut_cross], lonlat=True, c='purple', marker='o', edgecolor='none', s=10, vmax=0.5)
+            hp.projscatter(self.data['RA'][self.cut_final & self.cut_cross], self.data['DEC'][self.cut_final & self.cut_cross], lonlat=True, c='darkturquoise', marker='*', edgecolor='none', s=40, vmax=0.5)
         else:
-            healpy.projscatter(self.data['RA'][self.cut_final], self.data['DEC'][self.cut_final], lonlat=True, c='purple', marker='o', edgecolor='none', s=10, vmax=0.5)
+            hp.projscatter(self.data['RA'][self.cut_final], self.data['DEC'][self.cut_final], lonlat=True, c='purple', marker='o', edgecolor='none', s=10, vmax=0.5)
         subprocess.call('mkdir -p diagnostic_plots'.split())
         pylab.savefig('diagnostic_plots/significance_map_{}_{}.png'.format(self.survey, self.alg), bbox_inches='tight')
 

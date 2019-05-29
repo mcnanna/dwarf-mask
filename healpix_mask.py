@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import numpy as np
-import healpy
+import healpy as hp
 import astropy.io.fits as pyfits
 import pylab
 pylab.ion()
@@ -11,7 +11,7 @@ import ugali.utils.projector
 import ugali.utils.healpix
 import ugali.candidate.associate
 import associate
-from plot_utils import discrete_cmap
+from skymap import Skymap
 
 p = argparse.ArgumentParser()
 p.add_argument('survey', help="des, ps1, or gen, short for general. Default: gen")
@@ -30,7 +30,7 @@ print("Creating mask with NSIDE={} and NEST={}...".format(NSIDE, NEST))
 if args.load is not None:
     healpix_mask = ugali.utils.healpix.read_map(args.load, nest=NEST)
 else:
-    healpix_mask = np.tile(0, healpy.nside2npix(NSIDE))
+    healpix_mask = np.tile(0, hp.nside2npix(NSIDE))
 
 
 infile_dust = 'ebv_sfd98_fullres_nside_4096_nest_equatorial.fits.gz'
@@ -45,7 +45,7 @@ def cut_circles(ras, decs, radii=None, default_radius=0.1, min_radius=0.05):
     If radius (in degrees) are given, it blocks all pixels within disc of radius, with a minimum radius of min_radius.  
     If radius is not given or is nan, it defaults to default_radius (in degrees)
     """
-    cut = np.tile(False, healpy.nside2npix(NSIDE))
+    cut = np.tile(False, hp.nside2npix(NSIDE))
 
     if radii is None:
         radii = np.tile(default_radius, len(ras))
@@ -106,15 +106,15 @@ healpix_mask[bsc_cut] |= 0b01000
 if 'des' == args.survey:
     des_footprint = ugali.utils.healpix.read_map('y3a2_footprint_griz_1exp_v2.0.fits.gz', nest=True) 
     #print('Masking footprint...')
-    #npix = healpy.nside2npix(NSIDE)
+    #npix = hp.nside2npix(NSIDE)
     #nbad = 3
-    #des_cut = np.fromiter( (des_footprint[i] < 1 or sum(des_footprint[healpy.get_all_neighbours(NSIDE, i)] < 1) >= nbad for i in range(npix)), dtype=bool, count=npix ) # Mask if at least nbad neighbors outside the footprint
+    #des_cut = np.fromiter( (des_footprint[i] < 1 or sum(des_footprint[hp.get_all_neighbours(NSIDE, i)] < 1) >= nbad for i in range(npix)), dtype=bool, count=npix ) # Mask if at least nbad neighbors outside the footprint
     des_cut = des_footprint < 1
     healpix_mask[des_cut] |= 0b10000
 
 if 'ps1' == args.survey:
-    ps1_cut = healpy.query_strip(NSIDE, np.radians(90.0 - -25.0), np.radians(90.0 - -90.0), nest=False) # This function apparently isn't implemented for nest=True
-    ps1_cut = healpy.ring2nest(NSIDE, ps1_cut)
+    ps1_cut = hp.query_strip(NSIDE, np.radians(90.0 - -25.0), np.radians(90.0 - -90.0), nest=False) # This function apparently isn't implemented for nest=True
+    ps1_cut = hp.ring2nest(NSIDE, ps1_cut)
     healpix_mask[ps1_cut] |= 0b10000
 
     failures = pyfits.open('ugali_failures.fits')[1].data # NSIDE = 256
@@ -132,6 +132,7 @@ simplified_mask[cut_catalog] = 1
 simplified_mask[cut_ebv] = 2
 simplified_mask[cut_footprint] = 3
 
+print("Plotting...")
 n = 4
 title = ''
 if args.survey == 'des':
@@ -145,14 +146,28 @@ cl = base(np.linspace(0,1,n))
 color_list = [cl[0], cl[3], cl[1], cl[2]] # Swap green before the blues
 color_list[3] = np.array([0., 0, 0.25, 1.]) # Make the dark blue darker
 new_cmap = base.from_list('new_cmap', color_list, n)
-healpy.mollview(simplified_mask, nest=True, coord='C', cmap=new_cmap, title=title, xsize=1600)
+
+"""
+# Using mollview
+hp.mollview(simplified_mask, nest=True, coord='C', cmap=new_cmap, title=title, xsize=1600)
 ax = pylab.gca()
 cbar = ax.images[-1].colorbar
 cbar.set_ticks( (np.arange(n) + 0.5)*(n-1)/n )
 cbar.set_ticklabels(['Unmasked', 'Association', r'$E(B-V)$', 'Footprint'])
-healpy.graticule()
+hp.graticule()
+pylab.savefig('healpix_mask_{}_v1.png'.format(args.survey), bbox_inches='tight')
+"""
+
+# Using skymap
+simplified_mask_ring = hp.reorder(simplified_mask, n2r=True)
+fig, ax = pylab.subplots(figsize=(17,10))                     
+smap = Skymap(projection = 'kav7',lon_0=0)
+im,lon,lat,values = smap.draw_hpxmap(simplified_mask_ring, xsize=1600, cmap=new_cmap)
+cbar = pylab.colorbar(ticks = (np.arange(n) + 0.5)*(n-1)/n, fraction=0.027)
+cbar.set_ticklabels(['Unmasked', 'Association', r'$E(B-V) > 0.2$', 'Footprint'])
+pylab.title(title)
 pylab.savefig('healpix_mask_{}.png'.format(args.survey), bbox_inches='tight')
 
 print('Writing mask to healpix_mask_{}.fits.gz ...'.format(args.survey))
-healpy.write_map('healpix_mask_{}.fits.gz'.format(args.survey), healpix_mask, dtype=np.int32, nest=NEST, coord='C', overwrite=True)
+hp.write_map('healpix_mask_{}.fits.gz'.format(args.survey), healpix_mask, dtype=np.int32, nest=NEST, coord='C', overwrite=True)
 

@@ -30,7 +30,7 @@ des_ugali = Candidates('des', 'ugali', sigdict=sigdict)
 des_simple = Candidates('des', 'simple', sigdict=sigdict)
 ps1_ugali = Candidates('ps1', 'ugali', sigdict=sigdict)
 ps1_simple = Candidates('ps1', 'simple', sigdict=sigdict)
-"""
+
 # Make fits files, tables, and plots for each
 des_ugali.doitall()
 des_simple.doitall()
@@ -42,7 +42,7 @@ signal_des = pyfits.open("fits_files/signal_des_both.fits")[1].data
 signal_ps1 = pyfits.open("fits_files/signal_ps1_both.fits")[1].data
 make_nice_tables.signal_table("tables/signal.tex", signal_des, signal_ps1)
 subprocess.call("pdflatex -interaction nonstopmode -output-directory tables tables/signal.tex".split())
-"""
+
 
 # Combine sighists into one plot
 # This is pretty specialized to get it into a good format for the paper

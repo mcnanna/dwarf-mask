@@ -435,6 +435,8 @@ class ExtraStructures(SourceCatalog):
         self.data['ra'] = raw['ra']
         self.data['dec'] = raw['dec']
 
+        self.data['radius'] = raw['width'] # Only applies to ATLAS stream
+
         self.data['glon'],self.data['glat'] = cel2gal(raw['ra'],raw['dec'])
 
 

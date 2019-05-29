@@ -52,7 +52,7 @@ def sighist(cands, ax, legend=True, title=True, text=True, xlabel=True, ylabel=T
     elif cands.alg == 'ugali':
         bins = np.logspace(np.log10(10.), np.log10(200000.), num=70)
         ax.set_xscale('log')
-    ax.set_ylim(10**0, 4*10**4)
+    ax.set_ylim(0.7, 4*10**4)
     ax.set_yscale('log')
     ax.hist(cands.data[cands.SIG], bins=bins, color='red', histtype='step', cumulative=-1, label='All')
     ax.hist(cands.data[cands.SIG][cands.cut_ebv & cands.cut_footprint], bins=bins, color='blue', histtype='step', cumulative=-1, label= r'In footprint & $E(B-V) < 0.2$ mag')
@@ -84,4 +84,4 @@ sighist(des_ugali, axs[0,1], title=True, text=True, legend=True, xlabel=False, y
 sighist(ps1_simple, axs[1,0], title=False, text=False, legend=False, xlabel=True, ylabel=True)
 sighist(ps1_ugali, axs[1,1], title=False, text=True, legend=True, xlabel=True, ylabel=False)
 pylab.subplots_adjust(wspace=0.1, hspace=0.1)
-
+pylab.savefig('histograms.png', bbox_inches='tight')

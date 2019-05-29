@@ -161,7 +161,7 @@ pylab.savefig('healpix_mask_{}_v1.png'.format(args.survey), bbox_inches='tight')
 # Using skymap
 simplified_mask_ring = hp.reorder(simplified_mask, n2r=True)
 fig, ax = pylab.subplots(figsize=(17,10))                     
-smap = Skymap(projection = 'kav7',lon_0=0)
+smap = Skymap(projection = 'mbtfpq',lon_0=0)
 im,lon,lat,values = smap.draw_hpxmap(simplified_mask_ring, xsize=1600, cmap=new_cmap)
 cbar = pylab.colorbar(ticks = (np.arange(n) + 0.5)*(n-1)/n, fraction=0.027)
 cbar.set_ticklabels(['Unmasked', 'Association', r'$E(B-V) > 0.2$', 'Footprint'])

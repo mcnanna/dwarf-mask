@@ -43,6 +43,12 @@ signal_ps1 = pyfits.open("fits_files/signal_ps1_both.fits")[1].data
 make_nice_tables.signal_table("tables/signal.tex", signal_des, signal_ps1)
 subprocess.call("pdflatex -interaction nonstopmode -output-directory tables tables/signal.tex".split())
 
+# Combine remains into one big table
+remains_des = pyfits.open("fits_files/remains_des_both.fits")[1].data
+remains_ps1 = pyfits.open("fits_files/remains_ps1_both.fits")[1].data
+make_nice_tables.remains_table("tables/remains.tex", remains_des, remains_ps1, alg='both')
+subprocess.call("pdflatex -interaction nonstopmode -output-directory tables tables/remains.tex".split())
+raise SystemExit(0)
 
 # Combine sighists into one plot
 # This is pretty specialized to get it into a good format for the paper

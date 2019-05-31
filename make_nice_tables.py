@@ -56,7 +56,9 @@ def signal_table(outname, *signals):
         f.truncate()
 
 
-def remains_table(outname, remains, alg='simple'):
+def remains_table(outname, *remains, **alg):
+    alg = alg.pop('alg', 'simple') # Default alg is 'simple'
+
     SIG = 'TS' if alg == 'ugali' else 'SIG'
 
     justs = 'cccc'
@@ -76,11 +78,21 @@ def remains_table(outname, remains, alg='simple'):
         justs = 'lc' + justs + 'cc'
         header_row1 = ['Name', 'TS'] + header_row1 + [r"$m - M$", "Angular Separation"]
         header_row2 = ['', '(ugali)', '(simple)', '(deg)', '(deg)', '(ugali)', '(simple)', r"($'$)"]
-        data_headers = remains.dtype.names
+        data_headers = remains[0].dtype.names
         sigfigs = [0, 3] + sigfigs + [3, 2]
     
     t = TexTable(len(justs), justs=justs, comments="\\candidatecomments", caption="\\candidatecaption", notes="\\knownnotes", fontsize="\\tiny", doc=True)
     t.add_header_row(header_row1)
     t.add_header_row(header_row2)
-    t.add_data([remains[header] for header in data_headers], sigfigs=sigfigs)
+    t.add_data([remains[0][header] for header in data_headers], sigfigs=sigfigs)
+    for remain in remains[1:]:
+        t.add_data(['hline']*len(justs))
+        t.add_data([remain[header] for header in data_headers], sigfigs=sigfigs)
     t.print_table(outname)
+    # A hack to put in \hline
+    with open(outname, 'r+') as f:
+        lines = f.read().splitlines()
+        newlines = [(line if 'hline' not in line else '\hline') for line in lines]
+        f.seek(0)
+        f.write('\n'.join(newlines))
+        f.truncate()

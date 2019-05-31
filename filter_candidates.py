@@ -5,6 +5,7 @@ import numpy as np
 import healpy as hp
 import astropy.io.fits as pyfits
 import matplotlib.pyplot as plt
+plt.ion()
 from matplotlib.lines import Line2D
 import argparse
 

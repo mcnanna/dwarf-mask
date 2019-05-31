@@ -4,8 +4,7 @@ import subprocess
 import numpy as np
 import healpy as hp
 import astropy.io.fits as pyfits
-import pylab
-pylab.ion()
+import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 import argparse
 
@@ -244,14 +243,14 @@ class Candidates:
 
     ### Diagnostic plots
     def sighist(self, legend=True, title=True, text=True):
-        fig = pylab.figure(figsize=(6.0,5.0))
+        fig = plt.figure(figsize=(6.0,5.0))
         ax = fig.add_subplot(111)
         if self.alg == 'simple':
             bins = np.arange(5., 40.25, 0.5)
         elif self.alg == 'ugali':
             bins = np.logspace(np.log10(10.), np.log10(200000.), num=70)
-            pylab.xscale('log')
-        pylab.yscale('log')
+            plt.xscale('log')
+        plt.yscale('log')
         ax.hist(self.data[self.SIG], bins=bins, color='red', histtype='step', cumulative=-1, label='All')
         ax.hist(self.data[self.SIG][self.cut_ebv & self.cut_footprint], bins=bins, color='blue', histtype='step', cumulative=-1, label= r'$E(B-V) < 0.2$ mag & in footprint')
         ax.hist(self.data[self.SIG][self.cut_ebv & self.cut_footprint & self.cut_modulus], bins=bins, color='green', histtype='step', cumulative=-1, label=r'above & $m - M < {}$'.format(21.75 if self.survey == 'ps1' else 23.5))
@@ -263,25 +262,25 @@ class Candidates:
         if legend:
             handles, labels = ax.get_legend_handles_labels()
             new_handles = [Line2D([], [], c=h.get_edgecolor()) for h in handles]
-            pylab.legend(loc='upper right', handles=new_handles, labels=labels, prop={'size':8})
+            plt.legend(loc='upper right', handles=new_handles, labels=labels, prop={'size':8})
         if title:
-            pylab.title('SimpleBinner' if self.alg == 'simple' else 'Ugali', fontdict={'family': 'monospace'})
+            plt.title('SimpleBinner' if self.alg == 'simple' else 'Ugali', fontdict={'family': 'monospace'})
         else:
-            pylab.title(' ')
-        #pylab.title('{}'.format('Pan-STARRS' if self.survey == 'ps1' else 'DES', 'SimpleBinner' if self.alg == 'simple' else 'Ugali'))
+            plt.title(' ')
+        #plt.title('{}'.format('Pan-STARRS' if self.survey == 'ps1' else 'DES', 'SimpleBinner' if self.alg == 'simple' else 'Ugali'))
         if text:
-            pylab.text(0.9, 0.55, self.survey.upper(), transform=ax.transAxes, horizontalalignment='left', fontsize=12, weight='bold')
-        pylab.xlabel(self.SIG)
-        pylab.ylabel('Cumulative Count')
+            plt.text(0.9, 0.55, self.survey.upper(), transform=ax.transAxes, horizontalalignment='left', fontsize=12, weight='bold')
+        plt.xlabel(self.SIG)
+        plt.ylabel('Cumulative Count')
         subprocess.call('mkdir -p diagnostic_plots'.split())
-        pylab.savefig('diagnostic_plots/significance_distribution_{}_{}.png'.format(self.survey, self.alg), bbox_inches='tight')
+        plt.savefig('diagnostic_plots/significance_distribution_{}_{}.png'.format(self.survey, self.alg), bbox_inches='tight')
 
     
     def sigmap(self):
         infile_dust = 'ebv_sfd98_fullres_nside_4096_nest_equatorial.fits.gz'
         ebv_map = ugali.utils.healpix.read_map(infile_dust, nest=True)
 
-        #pylab.figure()
+        #plt.figure()
         hp.mollview(ebv_map, xsize=1600, min=0., max=0.5, cmap='binary', title='{0} > {1} Hotspots'.format(self.SIG, self.threshold), unit='E(B-V)', nest=True)
         hp.graticule()
         hp.projscatter(self.data['RA'][self.cut_sig], self.data['DEC'][self.cut_sig], lonlat=True, c='red', marker='o', edgecolor='none', s=2, vmax=0.5)
@@ -293,16 +292,16 @@ class Candidates:
         else:
             hp.projscatter(self.data['RA'][self.cut_final], self.data['DEC'][self.cut_final], lonlat=True, c='purple', marker='o', edgecolor='none', s=10, vmax=0.5)
         subprocess.call('mkdir -p diagnostic_plots'.split())
-        pylab.savefig('diagnostic_plots/significance_map_{}_{}.png'.format(self.survey, self.alg), bbox_inches='tight')
+        plt.savefig('diagnostic_plots/significance_map_{}_{}.png'.format(self.survey, self.alg), bbox_inches='tight')
 
     def modhist(self):
-        pylab.figure()
-        pylab.hist(self.data['MODULUS'][self.cut_final], bins=np.arange(14.25, 25.25, 0.5), cumulative=False)
-        pylab.xlabel('m-M')
-        pylab.ylabel('Count')
-        pylab.title('Unassociated Hotspots')
+        plt.figure()
+        plt.hist(self.data['MODULUS'][self.cut_final], bins=np.arange(14.25, 25.25, 0.5), cumulative=False)
+        plt.xlabel('m-M')
+        plt.ylabel('Count')
+        plt.title('Unassociated Hotspots')
         subprocess.call('mkdir -p diagnostic_plots'.split())
-        pylab.savefig('diagnostic_plots/modulus_distribution_{}_{}.png'.format(self.survey, self.alg), bbox_inches='tight')
+        plt.savefig('diagnostic_plots/modulus_distribution_{}_{}.png'.format(self.survey, self.alg), bbox_inches='tight')
 
 
     def doitall(self, table=True, legend=True, title=True, text=True):

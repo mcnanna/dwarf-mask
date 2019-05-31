@@ -2,9 +2,9 @@
 import subprocess
 import numpy as np
 import astropy.io.fits as pyfits
-import pylab
+import matplotlib.pyplot as plt
+plt.ion()
 from matplotlib.lines import Line2D
-pylab.ion()
 
 from filter_candidates import Candidates
 import make_nice_tables
@@ -78,10 +78,10 @@ def sighist(cands, ax, legend=True, title=True, text=True, xlabel=True, ylabel=T
     if ylabel:
         ax.set_ylabel('Cumulative Count')
 
-fig, axs = pylab.subplots(2, 2, sharex='col', sharey='all', figsize=(9, 7.5))
-sighist(des_simple, axs[0,0], title=True, text=False, legend=False, xlabel=False, ylabel=True)
-sighist(des_ugali, axs[0,1], title=True, text=True, legend=True, xlabel=False, ylabel=False)
-sighist(ps1_simple, axs[1,0], title=False, text=False, legend=False, xlabel=True, ylabel=True)
-sighist(ps1_ugali, axs[1,1], title=False, text=True, legend=True, xlabel=True, ylabel=False)
-pylab.subplots_adjust(wspace=0.1, hspace=0.1)
-pylab.savefig('histograms.png', bbox_inches='tight')
+fig, axes = plt.subplots(nrows=2, ncols=2, sharex='col', sharey='all', figsize=(9, 7.5))
+sighist(des_simple, axes[0,0], title=True, text=False, legend=False, xlabel=False, ylabel=True)
+sighist(des_ugali, axes[0,1], title=True, text=True, legend=True, xlabel=False, ylabel=False)
+sighist(ps1_simple, axes[1,0], title=False, text=False, legend=False, xlabel=True, ylabel=True)
+sighist(ps1_ugali, axes[1,1], title=False, text=True, legend=False, xlabel=True, ylabel=False)
+plt.subplots_adjust(wspace=0.1, hspace=0.1)
+plt.savefig('histograms.png', bbox_inches='tight')

@@ -30,7 +30,7 @@ des_ugali = Candidates('des', 'ugali', sigdict=sigdict)
 des_simple = Candidates('des', 'simple', sigdict=sigdict)
 ps1_ugali = Candidates('ps1', 'ugali', sigdict=sigdict)
 ps1_simple = Candidates('ps1', 'simple', sigdict=sigdict)
-
+"""
 # Make fits files, tables, and plots for each
 des_ugali.doitall()
 des_simple.doitall()
@@ -48,16 +48,19 @@ remains_des = pyfits.open("fits_files/remains_des_both.fits")[1].data
 remains_ps1 = pyfits.open("fits_files/remains_ps1_both.fits")[1].data
 make_nice_tables.remains_table("tables/remains.tex", remains_des, remains_ps1, alg='both')
 subprocess.call("pdflatex -interaction nonstopmode -output-directory tables tables/remains.tex".split())
-raise SystemExit(0)
-
+"""
 # Combine sighists into one plot
 # This is pretty specialized to get it into a good format for the paper
 def sighist(cands, ax, legend=True, title=True, text=True, xlabel=True, ylabel=True):
+    if cands.SIG == 'TS':
+        cands.data['TS'] = np.clip(np.sqrt(cands.data['TS']), 0, 100)
+
     if cands.alg == 'simple':
-        bins = np.arange(5., 40.25, 0.5)
+        bins = np.linspace(5., 40., num=71) # step = 0.5
     elif cands.alg == 'ugali':
-        bins = np.logspace(np.log10(10.), np.log10(200000.), num=70)
-        ax.set_xscale('log')
+        bins = np.linspace(5., 100.5, num=71)
+        #bins = np.logspace(np.log10(10.), np.log10(200000.), num=70)
+        #ax.set_xscale('log')
     ax.set_ylim(0.7, 4*10**4)
     ax.set_yscale('log')
     ax.hist(cands.data[cands.SIG], bins=bins, color='red', histtype='step', cumulative=-1, label='All')
@@ -80,7 +83,11 @@ def sighist(cands, ax, legend=True, title=True, text=True, xlabel=True, ylabel=T
         ax.set_ylabel(' '*8+ cands.survey.upper(), rotation=0, horizontalalignment='right') # Without extra spaces, it overlaps the subplot outline
         ax.yaxis.set_label_position("right")
     if xlabel:
-        ax.set_xlabel(cands.SIG)
+        if cands.SIG == 'SIG':
+            xlabel = 'SIG'
+        elif cands.SIG == 'TS':
+            xlabel = r'$\sqrt{\mathrm{TS}}$'
+        ax.set_xlabel(xlabel)
     if ylabel:
         ax.set_ylabel('Cumulative Count')
 
@@ -90,4 +97,4 @@ sighist(des_ugali, axes[0,1], title=True, text=True, legend=True, xlabel=False, 
 sighist(ps1_simple, axes[1,0], title=False, text=False, legend=False, xlabel=True, ylabel=True)
 sighist(ps1_ugali, axes[1,1], title=False, text=True, legend=False, xlabel=True, ylabel=False)
 plt.subplots_adjust(wspace=0.1, hspace=0.1)
-plt.savefig('histograms.png', bbox_inches='tight')
+plt.savefig('diagnostic_plots/significance_distribution_all.png', bbox_inches='tight')

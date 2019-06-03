@@ -9,9 +9,12 @@ def signal_table(outname, *signals):
     #    signal[1] = signal[1][nonoverlap]
 
     def reduce_signal(signal):
+        if ('TS' in signal.dtype.names) and ('SIG' in signal.dtype.names): # If it has both sig types, sqrt(TS) for comparison
+            signal['TS'] = np.sqrt(signal['TS'])
+
         cut = []
         keepers = ['Indus 1']
-        losers = ['LMC', 'Sagittarius dIrr', 'Sagittarius dSph', 'Leo A', 'Leo P', 'Leo T', 'Triangulum', 'WLM', 'Pegasus dIrr']
+        losers = ['LMC', 'Sagittarius dIrr', 'Sagittarius dSph', 'Leo A', 'Leo P', 'Leo T', 'Triangulum', 'WLM', 'Pegasus dIrr', 'Tucana', 'Cetus', 'Sextans B', 'Phoenix']
         # Remove all losers and Andromeda satellites and objects with an integer in their name, unless they're in keepers
         for name in signal['name']:
             if name in keepers:
@@ -33,14 +36,14 @@ def signal_table(outname, *signals):
                 cut.append(noint)
         cut = np.array(cut)
 
-        return np.sort(signal[cut], order = ['TS','SIG'])[::-1] # Sorting may be redundant with how the list is orignally sorted
+        return signal[cut]
                 
     signals = map(reduce_signal, signals)
 
     justs = 'lcccccccccc'
     t = TexTable(len(justs), justs=justs, comments="\\knowncomments", caption="\\knowncaption", notes="\\knownnotes", fontsize="\\tiny", doc=True)
-    t.add_header_row(['Name', 'TS', 'SIG', r"$m - M$", r"$m - M$", r"$m - M$", "Distance", r"$r_h$", r"$M_V$", "Ang. Sep.", "Ang. Sep."])
-    t.add_header_row(['', '(ugali)', '(simple)', '(ugali)', '(simple)', '(acutal)', '(kpc)', r"($'$)", '(mag)', r"($'$, ugali)", r"($'$, simple)"])
+    t.add_header_row(['Name', r'$\sqrt{\mathrm{TS}}$', 'SIG', r"$m - M$", r"$m - M$", r"$m - M$", "Distance", r"$r_h$", r"$M_V$", "Ang. Sep.", "Ang. Sep."])
+    t.add_header_row(['', '(ugali)', '(simple)', '(ugali)', '(simple)', '(published)', '(kpc)', r"($'$)", '(mag)', r"($'$, ugali)", r"($'$, simple)"])
     sigfigs = [0, 3, 3, 3, 3, 3, 3, 2, 3, 2, 2]
     t.add_data([signals[0][header] for header in signals[0].dtype.names], sigfigs=sigfigs)
     for signal in signals[1:]:
@@ -71,12 +74,16 @@ def remains_table(outname, *remains, **alg):
         justs = 'l' + justs
         header_row1 = ['Name'] + header_row1
         header_row2 = [''] + header_row2
-        data_headers = ['name'] + data_headers
+        data_headers = ['Name'] + data_headers
         sigfigs = [0] + sigfigs
 
     if alg == 'both':
+        for remain in remains:
+            if 'TS' in remain.dtype.names:
+                remain['TS'] = np.sqrt(remain['TS'])
+
         justs = 'lc' + justs + 'cc'
-        header_row1 = ['Name', 'TS'] + header_row1 + [r"$m - M$", "Angular Separation"]
+        header_row1 = ['Name', r'$\sqrt{\mathrm{TS}}$'] + header_row1 + [r"$m - M$", "Angular Separation"]
         header_row2 = ['', '(ugali)', '(simple)', '(deg)', '(deg)', '(ugali)', '(simple)', r"($'$)"]
         data_headers = remains[0].dtype.names
         sigfigs = [0, 3] + sigfigs + [3, 2]

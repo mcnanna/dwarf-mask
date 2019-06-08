@@ -32,7 +32,7 @@ class SourceCatalog(object):
                    ('dec',float),
                    ('glon',float),
                    ('glat',float),
-                   ('radius', float)]
+                   ('radius', float)] # degrees
         self.data = np.recarray(0,dtype=columns)
         self._load(filename)
         if np.isnan([self.data['glon'],self.data['glat']]).any():

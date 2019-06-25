@@ -336,7 +336,6 @@ def what_matches(name, known_dwarf_catalog='McConnachie15', tol=6.0):
 if __name__ == '__main__':
     TABLES = True
     if TABLES:
-        import make_nice_tables
         subprocess.call('mkdir -p tables'.split())
     subprocess.call('mkdir -p fits_files diagnostic_plots'.split())
 

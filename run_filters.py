@@ -30,7 +30,7 @@ des_ugali = Candidates('des', 'ugali', sigdict=sigdict)
 des_simple = Candidates('des', 'simple', sigdict=sigdict)
 ps1_ugali = Candidates('ps1', 'ugali', sigdict=sigdict)
 ps1_simple = Candidates('ps1', 'simple', sigdict=sigdict)
-"""
+
 # Make fits files, tables, and plots for each
 des_ugali.doitall()
 des_simple.doitall()
@@ -48,7 +48,7 @@ remains_des = pyfits.open("fits_files/remains_des_both.fits")[1].data
 remains_ps1 = pyfits.open("fits_files/remains_ps1_both.fits")[1].data
 make_nice_tables.remains_table("tables/remains.tex", remains_des, remains_ps1, alg='both')
 subprocess.call("pdflatex -interaction nonstopmode -output-directory tables tables/remains.tex".split())
-"""
+
 # Combine sighists into one plot
 # This is pretty specialized to get it into a good format for the paper
 def sighist(cands, ax, legend=True, title=True, text=True, xlabel=True, ylabel=True):

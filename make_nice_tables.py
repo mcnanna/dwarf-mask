@@ -13,8 +13,8 @@ def signal_table(outname, *signals):
             signal['TS'] = np.sqrt(signal['TS'])
 
         cut = []
-        keepers = ['Indus 1']
-        losers = ['LMC', 'Sagittarius dIrr', 'Sagittarius dSph', 'Leo A', 'Leo P', 'Leo T', 'Triangulum', 'WLM', 'Pegasus dIrr', 'Tucana', 'Cetus', 'Sextans B', 'Phoenix']
+        keepers = ['Segue 1', 'Segue 2', 'Willman 1']
+        losers = ['LMC', 'Sagittarius dIrr', 'Sagittarius dSph', 'Leo A', 'Leo P', 'Leo T', 'Triangulum', 'WLM', 'Pegasus dIrr', 'Tucana', 'Cetus', 'Sextans B', 'Phoenix', 'Sextans A', 'Antlia', 'Aquarius']
         # Remove all losers and Andromeda satellites and objects with an integer in their name, unless they're in keepers
         for name in signal['name']:
             if name in keepers:
@@ -40,15 +40,41 @@ def signal_table(outname, *signals):
                 
     signals = map(reduce_signal, signals)
 
-    justs = 'lcccccccccc'
-    t = TexTable(len(justs), justs=justs, comments="\\knowncomments", caption="\\knowncaption", notes="\\knownnotes", fontsize="\\tiny", doc=True)
-    t.add_header_row(['Name', r'$\sqrt{\mathrm{TS}}$', 'SIG', r"$m - M$", r"$m - M$", r"$m - M$", "Distance", r"$r_h$", r"$M_V$", "Ang. Sep.", "Ang. Sep."])
-    t.add_header_row(['', '(ugali)', '(simple)', '(ugali)', '(simple)', '(published)', '(kpc)', r"($'$)", '(mag)', r"($'$, ugali)", r"($'$, simple)"])
-    sigfigs = [0, 3, 3, 3, 3, 3, 3, 2, 3, 2, 2]
-    t.add_data([signals[0][header] for header in signals[0].dtype.names], sigfigs=sigfigs)
+    ref_dict = {}
+    i = 1
+    for signal in signals:
+        for ref in signal['ref']:
+            if ref in ['None', r"\ldots"]:
+                continue
+
+            elif ref not in ref_dict:
+                ref_dict[ref] = i
+                i += 1
+
+    for signal in signals:
+        for line in signal:
+            ref = line['ref']
+            if ref in ref_dict:
+                line['ref'] = ref_dict[line['ref']]
+
+    ref_dict_str = ("({}) {}, "*len(ref_dict)).format(*np.array([(ref_dict[key], key) for key in ref_dict.keys()]).flatten())
+
+    #justs = 'lcccccccccl'
+    justs = 'lccccccccl'
+    t = TexTable(len(justs), justs=justs, comments="\\knowncomments" + " References: " + ref_dict_str, caption="\\knowncaption", notes="\\knownnotes", fontsize="\\scriptsize", doc=True)
+    #t.add_header_row(['({})'.format(i+1) for i in range(len(justs))])
+    #t.add_header_row(['Name', r'$\sqrt{\mathrm{TS}}$', 'SIG', r"$P_{\rm det}$", "RA", "Dec", "$m - M$", "Distance", r"$r_h$", r"$M_V$", "Ref."])
+    #t.add_header_row(['', '', '', '', '(deg)', '(deg)', '', '(kpc)', r"($'$)", '(mag)', ''])
+    #roundings = [0, 1, 1, 2, 2, 2, 1, 0, 1, 1, 0]
+    t.add_header_row(['({})'.format(i+1) for i in range(len(justs))])
+    t.add_header_row(['Name', r'$\sqrt{\mathrm{TS}}$', 'SIG', "RA", "Dec", "$m - M$", "Distance", r"$r_h$", r"$M_V$", "Ref."])
+    t.add_header_row(['', '', '', '(deg)', '(deg)', '', '(kpc)', r"($'$)", '(mag)', ''])
+    roundings = [0, 1, 1, 2, 2, 1, 0, 1, 1, 0]
+    ignore = ['mod_ugali', 'mod_simple', 'angsep_ugali', 'angsep_simple']
+    t.add_data([signals[0][header] for header in signals[0].dtype.names if header not in ignore], sigfigs=roundings)
     for signal in signals[1:]:
         t.add_data(['hline']*len(justs))
-        t.add_data([signal[header] for header in signal.dtype.names], sigfigs=sigfigs)
+        t.add_data([signal[header] for header in signal.dtype.names if header not in ignore], sigfigs=roundings)
     t.print_table(outname)
     # A hack to put in \hline
     with open(outname, 'r+') as f:
@@ -68,14 +94,16 @@ def remains_table(outname, *remains, **alg):
     header_row1 = [SIG, r"$\alpha_{2000}$", r"$\delta_{2000}$", r"$m - M$"]
     header_row2 = ['', '(deg)', '(deg)', '']
     data_headers = [SIG, 'ra', 'dec', 'modulus']
-    sigfigs = [3, 5, 4, 3]
+    #sigfigs = [3, 5, 4, 3]
+    roundings = [1, 2, 2, 1]
 
     if alg == 'ugali':
         justs = 'l' + justs
         header_row1 = ['Name'] + header_row1
         header_row2 = [''] + header_row2
         data_headers = ['Name'] + data_headers
-        sigfigs = [0] + sigfigs
+        #sigfigs = [0] + sigfigs
+        roundings = [0] + roundings
 
     if alg == 'both':
         for remain in remains:
@@ -86,15 +114,16 @@ def remains_table(outname, *remains, **alg):
         header_row1 = ['Name', r'$\sqrt{\mathrm{TS}}$'] + header_row1 + [r"$m - M$", "Angular Separation"]
         header_row2 = ['', '(ugali)', '(simple)', '(deg)', '(deg)', '(ugali)', '(simple)', r"($'$)"]
         data_headers = remains[0].dtype.names
-        sigfigs = [0, 3] + sigfigs + [3, 2]
+        #sigfigs = [0, 3] + sigfigs + [3, 2]
+        roundings = [0, 1] + roundings + [1, 2]
     
     t = TexTable(len(justs), justs=justs, comments="\\candidatecomments", caption="\\candidatecaption", notes="\\knownnotes", fontsize="\\tiny", doc=True)
     t.add_header_row(header_row1)
     t.add_header_row(header_row2)
-    t.add_data([remains[0][header] for header in data_headers], sigfigs=sigfigs)
+    t.add_data([remains[0][header] for header in data_headers], sigfigs=roundings)
     for remain in remains[1:]:
         t.add_data(['hline']*len(justs))
-        t.add_data([remain[header] for header in data_headers], sigfigs=sigfigs)
+        t.add_data([remain[header] for header in data_headers], sigfigs=roundings)
     t.print_table(outname)
     # A hack to put in \hline
     with open(outname, 'r+') as f:

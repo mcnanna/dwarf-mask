@@ -106,6 +106,8 @@ class Candidates:
                 match_candidate, match_known_dwarf, angseps = ugali.utils.projector.match(self.data['RA'], self.data['DEC'], [known_dwarf['ra']], [known_dwarf['dec']], tol=tol)
 
                 name = known_dwarf['name']
+                ra = known_dwarf['ra']
+                dec = known_dwarf['dec']
                 if len(match_known_dwarf) > 0:
                     # print highest significance match (Usually only 1 match. Exceptions: LMC, Sagittarius dSph, Bootes III, Crater II (simple only))
                     mx = np.argmax(self.data[match_candidate][self.SIG])
@@ -134,17 +136,19 @@ class Candidates:
                     distance = np.nan
                     rhalf = np.nan
                     M_V = np.nan
+                    ref = r"\ldots"
                 else:
                     modulus_actual = lv['distance_modulus']
                     distance = lv['distance_kpc']
                     rhalf = lv['rhalf']
                     M_V = lv['m_v']
+                    ref = lv['structure_ref']
 
                 if (not (bit & 0b10000)) or (not np.isnan(sig)): # Don't bother writing results for non-detections outside of the footprint
                     if (len(signal) == 0) or (name not in np.array(signal)[:, 0]): # Try to avoid duplicates from the multiple catalogs
-                        signal.append((name, sig, modulus, modulus_actual, distance, rhalf, M_V, a, wascut, bit))
+                        signal.append((name, sig, ra, dec, modulus, modulus_actual, distance, rhalf, M_V, a, wascut, bit, ref))
 
-        dtype = [('name','|S18'),(self.SIG, float),('modulus',float),('modulus_actual',float),('distance',float),('rhalf',float),('M_V',float),('angsep',float),('cut','|S3'),('bit',int)]
+        dtype = [('name','|S18'),(self.SIG, float),('ra',float),('dec',float),('modulus',float),('modulus_actual',float),('distance',float),('rhalf',float),('M_V',float),('angsep',float),('cut','|S3'),('bit',int),('ref','|S24')]
         self.signal = np.sort(np.array(signal, dtype=dtype), order=self.SIG)[::-1]
         
         ### Combine results of two algorithsm
@@ -225,16 +229,16 @@ class Candidates:
             name = uga[i]['name']
             for j in range(len(sim)):
                 if sim[j]['name'] == name:
-                    combined_signal.append((name, uga['TS'][i], sim['SIG'][j], uga['modulus'][i], sim['modulus'][j], uga['modulus_actual'][i], uga['distance'][i], uga['rhalf'][i], uga['M_V'][i],  uga['angsep'][i], sim['angsep'][j]))
+                    combined_signal.append((name, uga['TS'][i], sim['SIG'][j], uga['ra'][i], uga['dec'][i], uga['modulus'][i], sim['modulus'][j], uga['modulus_actual'][i], uga['distance'][i], uga['rhalf'][i], uga['M_V'][i],  uga['angsep'][i], sim['angsep'][j], uga['ref'][i]))
                     sim = np.delete(sim, j)
                     break
             else:
-                combined_signal.append((name, uga['TS'][i], np.nan, uga['modulus'][i], np.nan, uga['modulus_actual'][i], uga['distance'][i], uga['rhalf'][i], uga['M_V'][i],  uga['angsep'][i], np.nan))
+                combined_signal.append((name, uga['TS'][i], np.nan, uga['ra'][i], uga['dec'][i], uga['modulus'][i], np.nan, uga['modulus_actual'][i], uga['distance'][i], uga['rhalf'][i], uga['M_V'][i],  uga['angsep'][i], np.nan, uga['ref'][i]))
 
         for j in range(len(sim)):
-                combined_signal.append((sim['name'][j], np.nan, sim['SIG'][j], np.nan, sim['modulus'][j], sim['modulus_actual'][j], sim['distance'][j], sim['rhalf'][j], sim['M_V'][j], np.nan, sim['angsep'][j]))
+                combined_signal.append((sim['name'][j], np.nan, sim['SIG'][j], sim['ra'][j], sim['dec'][j], np.nan, sim['modulus'][j], sim['modulus_actual'][j], sim['distance'][j], sim['rhalf'][j], sim['M_V'][j], np.nan, sim['angsep'][j], sim['ref'][j]))
         
-        dtype=[('name','|S18'),('TS',float),('SIG',float),('mod_ugali',float),('mod_simple',float),('mod_actual',float),('distance',float),('rhalf',float),('M_V',float),('angsep_ugali',float),('angsep_simple',float)]
+        dtype=[('name','|S18'),('TS',float),('SIG',float),('ra',float),('dec',float),('mod_ugali',float),('mod_simple',float),('mod_actual',float),('distance',float),('rhalf',float),('M_V',float),('angsep_ugali',float),('angsep_simple',float),('ref','|S24')]
         combined_signal = np.sort(np.array(combined_signal, dtype=dtype), order=['TS', 'SIG'])[::-1]
         pyfits.writeto('fits_files/signal_{}_both.fits'.format(self.survey), combined_signal, overwrite=True)
         if table:

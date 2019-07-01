@@ -24,8 +24,15 @@ lowsigdict = {
         ('des','ugali'):30.
         }
 
+testsigdict = {
+        ('ps1','simple'):6.,
+        ('ps1','ugali'):50,
+        ('des','simple'):7.,
+        ('des','ugali'):30
+        }
+
 # Filter candidates for each survey/alg combination
-sigdict = highsigdict
+sigdict = testsigdict
 des_ugali = Candidates('des', 'ugali', sigdict=sigdict)
 des_simple = Candidates('des', 'simple', sigdict=sigdict)
 ps1_ugali = Candidates('ps1', 'ugali', sigdict=sigdict)
@@ -61,7 +68,7 @@ def sighist(cands, ax, legend=True, title=True, text=True, xlabel=True, ylabel=T
         bins = np.linspace(5., 100.5, num=71)
         #bins = np.logspace(np.log10(10.), np.log10(200000.), num=70)
         #ax.set_xscale('log')
-    ax.set_ylim(0.7, 4*10**4)
+    ax.set_ylim(0.7, 1.5*10**4)
     ax.set_yscale('log')
     ax.hist(cands.data[cands.SIG], bins=bins, color='red', histtype='step', cumulative=-1, label='All')
     ax.hist(cands.data[cands.SIG][cands.cut_ebv & cands.cut_footprint], bins=bins, color='blue', histtype='step', cumulative=-1, label= r'In footprint & $E(B-V) < 0.2$ mag')
@@ -76,7 +83,7 @@ def sighist(cands, ax, legend=True, title=True, text=True, xlabel=True, ylabel=T
         new_handles = [Line2D([], [], c=h.get_edgecolor()) for h in handles]
         ax.legend(loc='upper right', handles=new_handles, labels=labels, prop={'size':8})
     if title:
-        ax.set_title('SimpleBinner' if cands.alg == 'simple' else 'Ugali', fontdict={'family': 'monospace'})
+        ax.set_title('SimpleBinner' if cands.alg == 'simple' else 'ugali', fontdict={'family': 'monospace'})
     else:
         ax.set_title(' ')
     if text:
@@ -98,3 +105,4 @@ sighist(ps1_simple, axes[1,0], title=False, text=False, legend=False, xlabel=Tru
 sighist(ps1_ugali, axes[1,1], title=False, text=True, legend=False, xlabel=True, ylabel=False)
 plt.subplots_adjust(wspace=0.1, hspace=0.1)
 plt.savefig('diagnostic_plots/significance_distribution_all.png', bbox_inches='tight')
+

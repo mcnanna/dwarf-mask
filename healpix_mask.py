@@ -119,10 +119,10 @@ def main(survey, plot=True, write=True):
         ps1_cut = hp.ring2nest(NSIDE, ps1_cut)
         healpix_mask[ps1_cut] |= 0b10000
 
-        failures = pyfits.open('ugali_failures.fits')[1].data # NSIDE = 256
-        fail_pix_256 = [ugali.utils.healpix.angToPix(256, fail['ra'], fail['dec'], nest=NEST) for fail in failures]
-        fail_pix = ugali.utils.healpix.ud_grade_ipix(fail_pix_256, 256, NSIDE, nest=NEST)
-        healpix_mask[fail_pix] |= 0b100000
+        #failures = pyfits.open('ugali_failures.fits')[1].data # NSIDE = 256
+        #fail_pix_256 = [ugali.utils.healpix.angToPix(256, fail['ra'], fail['dec'], nest=NEST) for fail in failures]
+        #fail_pix = ugali.utils.healpix.ud_grade_ipix(fail_pix_256, 256, NSIDE, nest=NEST)
+        #healpix_mask[fail_pix] |= 0b100000
 
     if plot:
         print("Simplifying mask for plotting...")
@@ -168,35 +168,35 @@ def main(survey, plot=True, write=True):
 
     return healpix_mask, simplified_mask_ring
 
+if __name__ == "__main__":
+    p = argparse.ArgumentParser()
+    p.add_argument('-s', '--survey', help="None(=both des and ps1), des, ps1, or gen, short for general, which doesn't apply a footprint mask")
+    p.add_argument('--no_plot', action='store_true')
+    p.add_argument('--no_write', action='store_true')
+    p.add_argument('-l', '--load', default=None, help="Load a map to write on top of. Default: None")
+    p.add_argument('-m', '--mode', type=int, default=2, help="Mode 1 uses ugali.candidate.associate.py and masks a radius of 6' near known galaxies. Mode 2 uses my associate.py and masks dynamically based on object size. Default: 2")
+    args = p.parse_args()
 
-p = argparse.ArgumentParser()
-p.add_argument('-s', '--survey', help="None(=both des and ps1), des, ps1, or gen, short for general, which doesn't apply a footprint mask")
-p.add_argument('--no_plot', action='store_true')
-p.add_argument('--no_write', action='store_true')
-p.add_argument('-l', '--load', default=None, help="Load a map to write on top of. Default: None")
-p.add_argument('-m', '--mode', type=int, default=2, help="Mode 1 uses ugali.candidate.associate.py and masks a radius of 6' near known galaxies. Mode 2 uses my associate.py and masks dynamically based on object size. Default: 2")
-args = p.parse_args()
+    if args.survey is None:
 
-if args.survey is None:
+        des_mask, des_mask_simplified = main('des', plot=(not args.no_plot), write=(not args.no_write))
+        ps1_mask, ps1_mask_simplified = main('ps1', plot=(not args.no_plot), write=(not args.no_write))
 
-    des_mask, des_mask_simplified = main('des', plot=(not args.no_plot), write=(not args.no_write))
-    ps1_mask, ps1_mask_simplified = main('ps1', plot=(not args.no_plot), write=(not args.no_write))
+        # Put the two healpix masks on the same plot
+        fig, axes = plt.subplots(nrows=2, ncols=1, figsize=(12, 10))
+        plt.sca(axes[0])
+        smap = Skymap(projection='mbtfpq', lon_0=0)
+        im,lon,lat,values = smap.draw_hpxmap(des_mask_simplified, xsize=1600, cmap=new_cmap)
+        plt.title('DES', fontsize='large')
+        plt.sca(axes[1])
+        smap = Skymap(projection='mbtfpq', lon_0=0)
+        im,lon,lat,values = smap.draw_hpxmap(ps1_mask_simplified, xsize=1600, cmap=new_cmap)
+        plt.title('Pan-STARRS', fontsize='large')
+        fig.subplots_adjust(right=0.8)
+        cbar_ax = fig.add_axes([0.85, 0.175, 0.020, 0.65])
+        cbar = fig.colorbar(im, cax=cbar_ax, ticks = (np.arange(n) + 0.5)*(n-1)/n )
+        cbar.set_ticklabels(['Unmasked', 'Association', r'$E(B-V) > 0.2$', 'Footprint'])
+        plt.savefig('healpix_masks.png', bbox_inches='tight')
 
-    # Put the two healpix masks on the same plot
-    fig, axes = plt.subplots(nrows=2, ncols=1, figsize=(12, 10))
-    plt.sca(axes[0])
-    smap = Skymap(projection='mbtfpq', lon_0=0)
-    im,lon,lat,values = smap.draw_hpxmap(des_mask_simplified, xsize=1600, cmap=new_cmap)
-    plt.title('DES', fontsize='large')
-    plt.sca(axes[1])
-    smap = Skymap(projection='mbtfpq', lon_0=0)
-    im,lon,lat,values = smap.draw_hpxmap(ps1_mask_simplified, xsize=1600, cmap=new_cmap)
-    plt.title('Pan-STARRS', fontsize='large')
-    fig.subplots_adjust(right=0.8)
-    cbar_ax = fig.add_axes([0.85, 0.175, 0.020, 0.65])
-    cbar = fig.colorbar(im, cax=cbar_ax, ticks = (np.arange(n) + 0.5)*(n-1)/n )
-    cbar.set_ticklabels(['Unmasked', 'Association', r'$E(B-V) > 0.2$', 'Footprint'])
-    plt.savefig('healpix_masks.png', bbox_inches='tight')
-
-else:
-    main(args.survey, plot=(not args.no_plot), write=(not args.no_write))
+    else:
+        main(args.survey, plot=(not args.no_plot), write=(not args.no_write))

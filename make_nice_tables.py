@@ -59,17 +59,12 @@ def signal_table(outname, *signals):
 
     ref_dict_str = ("({}) {}, "*len(ref_dict)).format(*np.array([(ref_dict[key], key) for key in ref_dict.keys()]).flatten())
 
-    #justs = 'lcccccccccl'
-    justs = 'lccccccccl'
+    justs = 'lcccccccccc'
     t = TexTable(len(justs), justs=justs, comments="\\knowncomments" + " References: " + ref_dict_str, caption="\\knowncaption", notes="\\knownnotes", fontsize="\\scriptsize", doc=True)
-    #t.add_header_row(['({})'.format(i+1) for i in range(len(justs))])
-    #t.add_header_row(['Name', r'$\sqrt{\mathrm{TS}}$', 'SIG', r"$P_{\rm det}$", "RA", "Dec", "$m - M$", "Distance", r"$r_h$", r"$M_V$", "Ref."])
-    #t.add_header_row(['', '', '', '', '(deg)', '(deg)', '', '(kpc)', r"($'$)", '(mag)', ''])
-    #roundings = [0, 1, 1, 2, 2, 2, 1, 0, 1, 1, 0]
     t.add_header_row(['({})'.format(i+1) for i in range(len(justs))])
-    t.add_header_row(['Name', r'$\sqrt{\mathrm{TS}}$', 'SIG', "RA", "Dec", "$m - M$", "Distance", r"$r_h$", r"$M_V$", "Ref."])
-    t.add_header_row(['', '', '', '(deg)', '(deg)', '', '(kpc)', r"($'$)", '(mag)', ''])
-    roundings = [0, 1, 1, 2, 2, 1, 0, 1, 1, 0]
+    t.add_header_row(['Name', r'$\sqrt{\mathrm{TS}}$', 'SIG', r"$P_{\rm det}$", "RA", "Dec", "$m - M$", "Distance", r"$r_h$", r"$M_V$", "Ref."])
+    t.add_header_row(['', '', '', '', '(deg)', '(deg)', '', '(kpc)', r"($'$)", '(mag)', ''])
+    roundings = [0, 1, 1, 2, 2, 2, 1, 0, 1, 1, 0]
     ignore = ['mod_ugali', 'mod_simple', 'angsep_ugali', 'angsep_simple']
     t.add_data([signals[0][header] for header in signals[0].dtype.names if header not in ignore], sigfigs=roundings)
     for signal in signals[1:]:
@@ -94,7 +89,6 @@ def remains_table(outname, *remains, **alg):
     header_row1 = [SIG, r"$\alpha_{2000}$", r"$\delta_{2000}$", r"$m - M$"]
     header_row2 = ['', '(deg)', '(deg)', '']
     data_headers = [SIG, 'ra', 'dec', 'modulus']
-    #sigfigs = [3, 5, 4, 3]
     roundings = [1, 2, 2, 1]
 
     if alg == 'ugali':
@@ -102,7 +96,6 @@ def remains_table(outname, *remains, **alg):
         header_row1 = ['Name'] + header_row1
         header_row2 = [''] + header_row2
         data_headers = ['Name'] + data_headers
-        #sigfigs = [0] + sigfigs
         roundings = [0] + roundings
 
     if alg == 'both':
@@ -114,7 +107,6 @@ def remains_table(outname, *remains, **alg):
         header_row1 = ['Name', r'$\sqrt{\mathrm{TS}}$'] + header_row1 + [r"$m - M$", "Angular Separation"]
         header_row2 = ['', '(ugali)', '(simple)', '(deg)', '(deg)', '(ugali)', '(simple)', r"($'$)"]
         data_headers = remains[0].dtype.names
-        #sigfigs = [0, 3] + sigfigs + [3, 2]
         roundings = [0, 1] + roundings + [1, 2]
     
     t = TexTable(len(justs), justs=justs, comments="\\candidatecomments", caption="\\candidatecaption", notes="\\knownnotes", fontsize="\\tiny", doc=True)

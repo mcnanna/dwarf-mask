@@ -14,10 +14,40 @@ import ugali.utils.healpix
 import associate
 import make_nice_tables
 
-highsigdict = {('ps1','simple'):6., ('ps1','ugali'):80., ('des','simple'):7., ('des','ugali'):50.}
+fiducialsigdict = {('ps1', 'simple'):6, ('ps1', 'ugali'):6**2, ('des', 'simple'):6, ('des', 'ugali'):6**2}
+
+def custom_sort(signal, order=None):
+    # Put highest to lowest
+    sorted_ = np.sort(signal, order=order)[::-1] 
+
+    # Put np.nan on the bottom
+    if order is not None:
+        if type(order) != list:
+            order = [order]
+
+        to_bottom = []
+        for i in range(len(sorted_)):
+            vals = []
+            for key in order:
+                vals.append(sorted_[i][key])
+
+            if True in map(np.isnan, vals):
+                # Might be high sig detection
+                highsig = False
+                for val in vals:
+                    if not np.isnan(val) and val > 10:
+                        highsig = True
+
+                if not highsig:
+                    to_bottom.append(i)
+
+        sorted_ = sorted_[[j for j in range(len(sorted_)) if j not in to_bottom] + to_bottom]
+
+    return sorted_
+
 
 class Candidates:
-    def __init__(self, survey, alg, infile=None, cross=True, threshold=None, sigdict=highsigdict, quiet=False):
+    def __init__(self, survey, alg, infile=None, cross=True, threshold=None, sigdict=fiducialsigdict, quiet=False):
         if 'd' in survey.lower():
             self.survey = 'des'
         elif 'p' in survey.lower():
@@ -55,12 +85,24 @@ class Candidates:
         ### Define and apply cuts
 
         # Consolidate nearby peaks, iterative approach
-        done = False
-        while not done:
-            match_1, match_2, angsep = ugali.utils.projector.match(self.data['ra'], self.data['dec'], self.data['ra'], self.data['dec'], tol=0.5, nnearest=2)
-            index_exclude = np.where(self.data[self.SIG][match_1] > self.data[self.SIG][match_2], match_2, match_1)
+        while True:
+            match_1, match_2, angsep = ugali.utils.projector.match(self.data['ra'], self.data['dec'], self.data['ra'], self.data['dec'], tol=0.2, nnearest=2)
+            #index_exclude = np.where(self.data[self.SIG][match_1] > self.data[self.SIG][match_2], match_2, match_1)
+            index_exclude = []
+            for j in range(len(angsep)):
+                i1 = match_1[j]
+                i2 = match_2[j]
+                sig1 = self.data[self.SIG][i1]
+                sig2 = self.data[self.SIG][i2]
+                if sig1 > sig2:
+                    index_exclude.append(i2)
+                elif sig2 > sig1:
+                    index_exclude.append(i1)
+                elif sig1 == sig2:
+                    index_exclude.append(max(i1, i2)) # This is arbitrary
+            index_exclude = np.array(index_exclude)
             if len(index_exclude) == 0:
-                done = True
+                break
             cut_consolidate = np.tile(True, len(self.data))
             cut_consolidate[index_exclude] = False
             self.data = self.data[cut_consolidate]
@@ -76,6 +118,7 @@ class Candidates:
         self.cut_footprint = np.where(mask[pix] & 0b10000, False, True)
         if self.survey == 'ps1' and self.alg == 'ugali':
             self.cut_footprint &= np.where(mask[pix] & 0b100000, False, True) # Add failures to footprint cut 
+        self.cut_footprint &= np.where(mask[pix] & 0b1000000, False, True) # Add artifacts to footprint cut
 
         # Other cuts (modulus, size, shape)
         if self.survey == 'ps1':
@@ -96,6 +139,7 @@ class Candidates:
         ### Signal Detection
 
         lvdb = pyfits.open('lvdb_v2.fits')[1].data
+        pdet_dict = np.load('pdet_{}.npy'.format(self.survey.upper())).item()
         signal = []
         for known_dwarf_catalog in ['McConnachie15', 'ExtraDwarfs']:
             known_dwarfs = associate.catalogFactory(known_dwarf_catalog)
@@ -109,7 +153,7 @@ class Candidates:
                 ra = known_dwarf['ra']
                 dec = known_dwarf['dec']
                 if len(match_known_dwarf) > 0:
-                    # print highest significance match (Usually only 1 match. Exceptions: LMC, Sagittarius dSph, Bootes III, Crater II (simple only))
+                    # keep highest significance match (Usually only 1 match. Exceptions: LMC, Sagittarius dSph, Bootes III, Crater II (simple only))
                     mx = np.argmax(self.data[match_candidate][self.SIG])
                     idx = match_candidate[mx]
                     sig = self.data[self.SIG][idx]
@@ -143,18 +187,28 @@ class Candidates:
                     rhalf = lv['rhalf']
                     M_V = lv['m_v']
                     ref = lv['structure_ref']
+                    if ref == 'None':
+                        ref = lv['distance_ref']
+
+                # Get p_det from dictionary (make sure to update if the sigs ever chnge)
+                try:
+                    pdet = pdet_dict[name][0] # pdet_dict[name] is an array with a single element, hence the [0]
+                except KeyError:
+                    pdet = np.nan
 
                 if (not (bit & 0b10000)) or (not np.isnan(sig)): # Don't bother writing results for non-detections outside of the footprint
                     if (len(signal) == 0) or (name not in np.array(signal)[:, 0]): # Try to avoid duplicates from the multiple catalogs
-                        signal.append((name, sig, ra, dec, modulus, modulus_actual, distance, rhalf, M_V, a, wascut, bit, ref))
+                        signal.append((name, sig, pdet, ra, dec, modulus, modulus_actual, distance, rhalf, M_V, a, wascut, bit, ref))
 
-        dtype = [('name','|S18'),(self.SIG, float),('ra',float),('dec',float),('modulus',float),('modulus_actual',float),('distance',float),('rhalf',float),('M_V',float),('angsep',float),('cut','|S3'),('bit',int),('ref','|S24')]
-        self.signal = np.sort(np.array(signal, dtype=dtype), order=self.SIG)[::-1]
+        dtype = [('name','|S18'),(self.SIG, float),('pdet', float),('ra',float),('dec',float),('modulus',float),('modulus_actual',float),('distance',float),('rhalf',float),('M_V',float),('angsep',float),('cut','|S3'),('bit',int),('ref','|S24')]
+        self.signal = custom_sort(np.array(signal, dtype=dtype), order=self.SIG)
+
+
         
         ### Combine results of two algorithsm
 
         if self.cross:
-            # Make sure you pass a sigdict if you want to compare significances other than the defaults in highsigdict
+            # Make sure you pass a sigdict if you want to compare significances other than the defaults in fiducialsigdict
             if self.alg == 'simple':
                 cands2 = Candidates(self.survey, 'ugali', cross=False, sigdict=sigdict, quiet=True)
             if self.alg == 'ugali':
@@ -169,12 +223,14 @@ class Candidates:
             self.cut_cross = np.array([(self.data[i]['ra'], self.data[i]['dec']) in zip(self.matches['ra'], self.matches['dec']) for i in range(len(self.data))])
 
         if not quiet:    
+            print
             print self.survey, self.alg
             print "Passed cuts:", sum(self.cut_bulk & self.cut_dwarfs)
             print "Passed sig:", sum(self.cut_sig)
             print "Passed final:", sum(self.cut_final)
             if self.cross:
                 print "Passed cross:", sum(self.cut_cross)
+            print
 
 
     # Write sorted remains to .fits and make a TeX table
@@ -229,17 +285,17 @@ class Candidates:
             name = uga[i]['name']
             for j in range(len(sim)):
                 if sim[j]['name'] == name:
-                    combined_signal.append((name, uga['TS'][i], sim['SIG'][j], uga['ra'][i], uga['dec'][i], uga['modulus'][i], sim['modulus'][j], uga['modulus_actual'][i], uga['distance'][i], uga['rhalf'][i], uga['M_V'][i],  uga['angsep'][i], sim['angsep'][j], uga['ref'][i]))
+                    combined_signal.append((name, uga['TS'][i], sim['SIG'][j], uga['pdet'][i], uga['ra'][i], uga['dec'][i], uga['modulus'][i], sim['modulus'][j], uga['modulus_actual'][i], uga['distance'][i], uga['rhalf'][i], uga['M_V'][i],  uga['angsep'][i], sim['angsep'][j], uga['ref'][i]))
                     sim = np.delete(sim, j)
                     break
             else:
-                combined_signal.append((name, uga['TS'][i], np.nan, uga['ra'][i], uga['dec'][i], uga['modulus'][i], np.nan, uga['modulus_actual'][i], uga['distance'][i], uga['rhalf'][i], uga['M_V'][i],  uga['angsep'][i], np.nan, uga['ref'][i]))
+                combined_signal.append((name, uga['TS'][i], np.nan, uga['pdet'][i], uga['ra'][i], uga['dec'][i], uga['modulus'][i], np.nan, uga['modulus_actual'][i], uga['distance'][i], uga['rhalf'][i], uga['M_V'][i],  uga['angsep'][i], np.nan, uga['ref'][i]))
 
         for j in range(len(sim)):
-                combined_signal.append((sim['name'][j], np.nan, sim['SIG'][j], sim['ra'][j], sim['dec'][j], np.nan, sim['modulus'][j], sim['modulus_actual'][j], sim['distance'][j], sim['rhalf'][j], sim['M_V'][j], np.nan, sim['angsep'][j], sim['ref'][j]))
+                combined_signal.append((sim['name'][j], np.nan, sim['SIG'][j], sim['pdet'][j], sim['ra'][j], sim['dec'][j], np.nan, sim['modulus'][j], sim['modulus_actual'][j], sim['distance'][j], sim['rhalf'][j], sim['M_V'][j], np.nan, sim['angsep'][j], sim['ref'][j]))
         
-        dtype=[('name','|S18'),('TS',float),('SIG',float),('ra',float),('dec',float),('mod_ugali',float),('mod_simple',float),('mod_actual',float),('distance',float),('rhalf',float),('M_V',float),('angsep_ugali',float),('angsep_simple',float),('ref','|S24')]
-        combined_signal = np.sort(np.array(combined_signal, dtype=dtype), order=['TS', 'SIG'])[::-1]
+        dtype=[('name','|S18'),('TS',float),('SIG',float),('pdet',float),('ra',float),('dec',float),('mod_ugali',float),('mod_simple',float),('mod_actual',float),('distance',float),('rhalf',float),('M_V',float),('angsep_ugali',float),('angsep_simple',float),('ref','|S24')]
+        combined_signal = custom_sort(np.array(combined_signal, dtype=dtype), order=['TS', 'SIG'])
         pyfits.writeto('fits_files/signal_{}_both.fits'.format(self.survey), combined_signal, overwrite=True)
         if table:
             make_nice_tables.signal_table('tables/signal_{}.tex'.format(self.survey), combined_signal)

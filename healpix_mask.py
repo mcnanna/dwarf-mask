@@ -123,6 +123,12 @@ def main(survey, plot=True, write=True):
         #fail_pix_256 = [ugali.utils.healpix.angToPix(256, fail['ra'], fail['dec'], nest=NEST) for fail in failures]
         #fail_pix = ugali.utils.healpix.ud_grade_ipix(fail_pix_256, 256, NSIDE, nest=NEST)
         #healpix_mask[fail_pix] |= 0b100000
+        
+        # Artifact masks
+        artifact_coords = np.array([(278.72, 38.55), (34.97, -3.04), (201.43, -11.44), (214.56, 19.04), (262.56, 52.1), (170.01, -14.99), (186.6, 46.2), (19.4, -17.51), (39.88, 0.18)])
+        artifact_ras, artifact_decs = artifact_coords.T
+        artifact_cut = cut_circles(artifact_ras, artifact_decs, default_radius=0.1)
+        healpix_mask[artifact_cut] |= 0b1000000 
 
     if plot:
         print("Simplifying mask for plotting...")

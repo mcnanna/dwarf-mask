@@ -10,29 +10,43 @@ from filter_candidates import Candidates
 import make_nice_tables
 
 # Define significances
-highsigdict = {
-        ('ps1','simple'):6.,
-        ('ps1','ugali'):80.,
-        ('des','simple'):7.,
-        ('des','ugali'):50.
-        }
-
-lowsigdict = {
-        ('ps1','simple'):5.,
-        ('ps1','ugali'):50.,
-        ('des','simple'):7.,
-        ('des','ugali'):30.
-        }
+#highsigdict = {
+#        ('ps1','simple'):6.,
+#        ('ps1','ugali'):80.,
+#        ('des','simple'):7.,
+#        ('des','ugali'):50.
+#        }
+#
+#lowsigdict = {
+#        ('ps1','simple'):5.,
+#        ('ps1','ugali'):50.,
+#        ('des','simple'):7.,
+#        ('des','ugali'):30.
+#        }
 
 testsigdict = {
         ('ps1','simple'):6.,
         ('ps1','ugali'):50,
         ('des','simple'):7.,
-        ('des','ugali'):30
+        ('des','ugali'):8**2
+        }
+
+conservativesigdict = {
+        ('ps1','simple'):7.,
+        ('ps1','ugali'):7**2,
+        ('des','simple'):7.,
+        ('des','ugali'):8**2
+        }
+
+fiducialsigdict = {
+        ('ps1','simple'):6.,
+        ('ps1','ugali'):6**2,
+        ('des','simple'):6,
+        ('des','ugali'):6**2
         }
 
 # Filter candidates for each survey/alg combination
-sigdict = testsigdict
+sigdict = fiducialsigdict
 des_ugali = Candidates('des', 'ugali', sigdict=sigdict)
 des_simple = Candidates('des', 'simple', sigdict=sigdict)
 ps1_ugali = Candidates('ps1', 'ugali', sigdict=sigdict)
@@ -68,7 +82,7 @@ def sighist(cands, ax, legend=True, title=True, text=True, xlabel=True, ylabel=T
         bins = np.linspace(5., 100.5, num=71)
         #bins = np.logspace(np.log10(10.), np.log10(200000.), num=70)
         #ax.set_xscale('log')
-    ax.set_ylim(0.7, 1.5*10**4)
+    ax.set_ylim(0.7, 2.5*10**4)
     ax.set_yscale('log')
     ax.hist(cands.data[cands.SIG], bins=bins, color='red', histtype='step', cumulative=-1, label='All')
     ax.hist(cands.data[cands.SIG][cands.cut_ebv & cands.cut_footprint], bins=bins, color='blue', histtype='step', cumulative=-1, label= r'In footprint & $E(B-V) < 0.2$ mag')

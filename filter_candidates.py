@@ -118,7 +118,7 @@ class Candidates:
         self.cut_footprint = np.where(mask[pix] & 0b10000, False, True)
         if self.survey == 'ps1' and self.alg == 'ugali':
             self.cut_footprint &= np.where(mask[pix] & 0b100000, False, True) # Add failures to footprint cut 
-        self.cut_footprint &= np.where(mask[pix] & 0b1000000, False, True) # Add artifacts to footprint cut
+            self.cut_footprint &= np.where(mask[pix] & 0b1000000, False, True) # Add artifacts to footprint cut
 
         # Other cuts (modulus, size, shape)
         if self.survey == 'ps1':
@@ -165,10 +165,10 @@ class Candidates:
                     sig = np.nan
                     a = np.nan
                     modulus = np.nan
-                    modulus_actual = np.nan
-                    distance = np.nan
-                    rhalf = np.nan
-                    M_V = np.nan
+                    #modulus_actual = np.nan
+                    #distance = np.nan
+                    #rhalf = np.nan
+                    #M_V = np.nan
                     bit = mask[ugali.utils.healpix.angToPix(4096, known_dwarf['ra'], known_dwarf['dec'], nest=True)]
                     wascut = ''
 
@@ -178,13 +178,15 @@ class Candidates:
                 except IndexError:
                     modulus_actual = np.nan
                     distance = np.nan
-                    rhalf = np.nan
+                    rhalf_obs = np.nan
+                    rhalf_pc = np.nan
                     M_V = np.nan
                     ref = r"\ldots"
                 else:
                     modulus_actual = lv['distance_modulus']
                     distance = lv['distance_kpc']
-                    rhalf = lv['rhalf']
+                    rhalf_obs = lv['rhalf']
+                    rhalf_pc = (distance*1000.) * np.radians(rhalf_obs/60.)
                     M_V = lv['m_v']
                     ref = lv['structure_ref']
                     if ref == 'None':
@@ -198,9 +200,13 @@ class Candidates:
 
                 if (not (bit & 0b10000)) or (not np.isnan(sig)): # Don't bother writing results for non-detections outside of the footprint
                     if (len(signal) == 0) or (name not in np.array(signal)[:, 0]): # Try to avoid duplicates from the multiple catalogs
-                        signal.append((name, sig, pdet, ra, dec, modulus, modulus_actual, distance, rhalf, M_V, a, wascut, bit, ref))
+                        signal.append((name, sig, pdet, ra, dec, modulus, modulus_actual, distance, rhalf_obs, rhalf_pc, M_V, a, wascut, bit, ref))
 
-        dtype = [('name','|S18'),(self.SIG, float),('pdet', float),('ra',float),('dec',float),('modulus',float),('modulus_actual',float),('distance',float),('rhalf',float),('M_V',float),('angsep',float),('cut','|S3'),('bit',int),('ref','|S24')]
+        dtype = [('name','|S18'),(self.SIG, float),('pdet', float),
+                ('ra',float),('dec',float),
+                ('modulus',float),('modulus_actual',float),('distance',float),('rhalf_obs',float),('rhalf_pc',float),('M_V',float),
+                ('angsep',float),('cut','|S3'),('bit',int),
+                ('ref','|S24')]
         self.signal = custom_sort(np.array(signal, dtype=dtype), order=self.SIG)
 
 
@@ -285,16 +291,43 @@ class Candidates:
             name = uga[i]['name']
             for j in range(len(sim)):
                 if sim[j]['name'] == name:
-                    combined_signal.append((name, uga['TS'][i], sim['SIG'][j], uga['pdet'][i], uga['ra'][i], uga['dec'][i], uga['modulus'][i], sim['modulus'][j], uga['modulus_actual'][i], uga['distance'][i], uga['rhalf'][i], uga['M_V'][i],  uga['angsep'][i], sim['angsep'][j], uga['ref'][i]))
+                    combined_signal.append(
+                            (name, uga['TS'][i], sim['SIG'][j], uga['pdet'][i],
+                                uga['ra'][i], uga['dec'][i],
+                                uga['modulus'][i], sim['modulus'][j],
+                                uga['modulus_actual'][i], uga['rhalf_obs'][i], 
+                                uga['distance'][i], uga['rhalf_pc'][i], uga['M_V'][i], 
+                                uga['angsep'][i], sim['angsep'][j],
+                                uga['ref'][i]))
                     sim = np.delete(sim, j)
                     break
             else:
-                combined_signal.append((name, uga['TS'][i], np.nan, uga['pdet'][i], uga['ra'][i], uga['dec'][i], uga['modulus'][i], np.nan, uga['modulus_actual'][i], uga['distance'][i], uga['rhalf'][i], uga['M_V'][i],  uga['angsep'][i], np.nan, uga['ref'][i]))
+                combined_signal.append(
+                        (name, uga['TS'][i], np.nan, uga['pdet'][i],
+                            uga['ra'][i], uga['dec'][i], 
+                            uga['modulus'][i], np.nan,
+                            uga['modulus_actual'][i], uga['rhalf_obs'][i], 
+                            uga['distance'][i], uga['rhalf_pc'][i], uga['M_V'][i], 
+                            uga['angsep'][i], np.nan,
+                            uga['ref'][i]))
 
         for j in range(len(sim)):
-                combined_signal.append((sim['name'][j], np.nan, sim['SIG'][j], sim['pdet'][j], sim['ra'][j], sim['dec'][j], np.nan, sim['modulus'][j], sim['modulus_actual'][j], sim['distance'][j], sim['rhalf'][j], sim['M_V'][j], np.nan, sim['angsep'][j], sim['ref'][j]))
+                combined_signal.append(
+                        (sim['name'][j], np.nan, sim['SIG'][j], sim['pdet'][j],
+                            sim['ra'][j], sim['dec'][j],
+                            np.nan, sim['modulus'][j],
+                            sim['modulus_actual'][j], sim['rhalf_obs'][j], 
+                            sim['distance'][j], sim['rhalf_pc'][j], sim['M_V'][j],
+                            np.nan, sim['angsep'][j],
+                            sim['ref'][j]))
         
-        dtype=[('name','|S18'),('TS',float),('SIG',float),('pdet',float),('ra',float),('dec',float),('mod_ugali',float),('mod_simple',float),('mod_actual',float),('distance',float),('rhalf',float),('M_V',float),('angsep_ugali',float),('angsep_simple',float),('ref','|S24')]
+        dtype=[('name','|S18'),('TS',float),('SIG',float),('pdet',float),
+                ('ra',float),('dec',float),
+                ('mod_ugali',float),('mod_simple',float),
+                ('mod_actual',float),('rhalf_obs',float),
+                ('distance',float),('rhalf_pc',float),('M_V',float),
+                ('angsep_ugali',float),('angsep_simple',float),
+                ('ref','|S24')]
         combined_signal = custom_sort(np.array(combined_signal, dtype=dtype), order=['TS', 'SIG'])
         pyfits.writeto('fits_files/signal_{}_both.fits'.format(self.survey), combined_signal, overwrite=True)
         if table:

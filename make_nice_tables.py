@@ -59,12 +59,26 @@ def signal_table(outname, *signals):
 
     ref_dict_str = ("({}) {}, "*len(ref_dict)).format(*np.array([(ref_dict[key], key) for key in ref_dict.keys()]).flatten())
 
-    justs = 'lcccccccccc'
+    justs = 'lccccccccccc'
     t = TexTable(len(justs), justs=justs, comments="\\knowncomments" + " References: " + ref_dict_str, caption="\\knowncaption", notes="\\knownnotes", fontsize="\\scriptsize", doc=True)
     t.add_header_row(['({})'.format(i+1) for i in range(len(justs))])
-    t.add_header_row(['Name', r'$\sqrt{\mathrm{TS}}$', 'SIG', r"$P_{\rm det}$", "RA", "Dec", "$m - M$", "Distance", r"$r_h$", r"$M_V$", "Ref."])
-    t.add_header_row(['', '', '', '', '(deg)', '(deg)', '', '(kpc)', r"($'$)", '(mag)', ''])
-    roundings = [0, 1, 1, 2, 2, 2, 1, 0, 1, 1, 0]
+    t.add_header_row(
+            ['Name', r'$\sqrt{\mathrm{TS}}$', 'SIG', r"$P_{\rm det} \hspace{0.3in}$",
+                "RA", "Dec",
+                "$m - M$", r"$r_{1/2}$",
+                "Distance", r"$r_{1/2}$", r"$M_V$",
+                "Ref."])
+    t.add_header_row(
+            ['', '', '', '',
+                '(deg)', '(deg)', 
+                '', r"($'$)",
+                '(kpc)', '(pc)', '(mag)',
+                ''])
+    roundings = [0, 1, 1, 2,
+            2, 2, 
+            1, 1,
+            0, 0, 1,
+            0]
     ignore = ['mod_ugali', 'mod_simple', 'angsep_ugali', 'angsep_simple']
     t.add_data([signals[0][header] for header in signals[0].dtype.names if header not in ignore], sigfigs=roundings)
     for signal in signals[1:]:

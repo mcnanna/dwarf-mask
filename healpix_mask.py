@@ -16,6 +16,7 @@ from skymap import Skymap
 
 NEST=True
 NSIDE=4096
+version = 1.0
 
 # Custom color map for plotting, based on 'ocean'
 n = 4
@@ -168,7 +169,7 @@ def main(survey, plot=True, write=True):
         cbar.set_ticks( (np.arange(n) + 0.5)*(n-1)/n )
         cbar.set_ticklabels(['Unmasked', 'Association', r'$E(B-V)$', 'Footprint'])
         hp.graticule()
-        plt.savefig('healpix_mask_{}_v1.png'.format(survey), bbox_inches='tight')
+        plt.savefig('healpix_mask_{}_v{}.png'.format(survey, version), bbox_inches='tight')
         """
 
         # Using skymap
@@ -179,11 +180,11 @@ def main(survey, plot=True, write=True):
         cbar = plt.colorbar(ticks = (np.arange(n) + 0.5)*(n-1)/n, fraction=0.02)
         cbar.set_ticklabels(['Unmasked', 'Association', r'$E(B-V) > 0.2$', 'Footprint'])
         plt.title(title)
-        plt.savefig('healpix_mask_{}.png'.format(survey), bbox_inches='tight')
+        plt.savefig('healpix_mask_{}_v{}.png'.format(survey, version), bbox_inches='tight')
 
     if write:
-        print('Writing mask to healpix_mask_{}.fits.gz ...'.format(survey))
-        hp.write_map('healpix_mask_{}.fits.gz'.format(survey), healpix_mask, dtype=np.int32, nest=NEST, coord='C', overwrite=True)
+        print('Writing mask to healpix_mask_{}_v{}.fits.gz ...'.format(survey, version))
+        hp.write_map('healpix_mask_{}_v{}.fits.gz'.format(survey, version), healpix_mask, dtype=np.int32, nest=NEST, coord='C', overwrite=True)
 
     return healpix_mask, simplified_mask_ring
 
@@ -215,7 +216,7 @@ if __name__ == "__main__":
         cbar_ax = fig.add_axes([0.85, 0.175, 0.020, 0.65])
         cbar = fig.colorbar(im, cax=cbar_ax, ticks = (np.arange(n) + 0.5)*(n-1)/n )
         cbar.set_ticklabels(['Unmasked', 'Association', r'$E(B-V) > 0.2$', 'Footprint'])
-        plt.savefig('healpix_masks.png', bbox_inches='tight')
+        plt.savefig('healpix_masks_v{}.png'.format(version), bbox_inches='tight')
 
     else:
         main(args.survey, plot=(not args.no_plot), write=(not args.no_write))

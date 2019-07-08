@@ -63,9 +63,9 @@ def signal_table(outname, *signals):
     t = TexTable(len(justs), justs=justs, comments="\\knowncomments" + " References: " + ref_dict_str, caption="\\knowncaption", notes="\\knownnotes", fontsize="\\scriptsize", doc=True)
     t.add_header_row(['({})'.format(i+1) for i in range(len(justs))])
     t.add_header_row(
-            ['Name', r'$\sqrt{\mathrm{TS}}$', 'SIG', r"$P_{\rm det} \hspace{0.3in}$",
+            ['Name', r'$\sqrt{\mathrm{TS}}$', 'SIG', r"$P_{\rm det}$",
                 "RA", "Dec",
-                "$m - M$", r"$r_{1/2}$",
+                "$m - M$", r"$r_h$",
                 "Distance", r"$r_{1/2}$", r"$M_V$",
                 "Ref."])
     t.add_header_row(
@@ -91,7 +91,7 @@ def signal_table(outname, *signals):
         newlines = [(line if 'hline' not in line else '\hline') for line in lines]
         f.seek(0)
         f.write('\n'.join(newlines))
-        f.truncate()
+        #f.truncate()
 
 
 def remains_table(outname, *remains, **alg):
@@ -123,7 +123,7 @@ def remains_table(outname, *remains, **alg):
         data_headers = remains[0].dtype.names
         roundings = [0, 1] + roundings + [1, 2]
     
-    t = TexTable(len(justs), justs=justs, comments="\\candidatecomments", caption="\\candidatecaption", notes="\\knownnotes", fontsize="\\tiny", doc=True)
+    t = TexTable(len(justs), justs=justs, comments="\\candidatecomments", caption="\\candidatecaption", notes="\\knownnotes", fontsize="\\scriptsize", doc=True)
     t.add_header_row(header_row1)
     t.add_header_row(header_row2)
     t.add_data([remains[0][header] for header in data_headers], sigfigs=roundings)

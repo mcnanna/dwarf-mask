@@ -14,6 +14,7 @@ import ugali.utils.healpix
 import associate
 import make_nice_tables
 
+version = 1.0
 fiducialsigdict = {('ps1', 'simple'):6, ('ps1', 'ugali'):6**2, ('des', 'simple'):6, ('des', 'ugali'):6**2}
 
 def custom_sort(signal, order=None):
@@ -40,7 +41,7 @@ def custom_sort(signal, order=None):
 
                 if not highsig:
                     to_bottom.append(i)
-
+    
         sorted_ = sorted_[[j for j in range(len(sorted_)) if j not in to_bottom] + to_bottom]
 
     return sorted_
@@ -84,7 +85,7 @@ class Candidates:
 
         ### Define and apply cuts
 
-        # Consolidate nearby peaks, iterative approach
+        # Consolidate nearby peaks iteratively
         while True:
             match_1, match_2, angsep = ugali.utils.projector.match(self.data['ra'], self.data['dec'], self.data['ra'], self.data['dec'], tol=0.2, nnearest=2)
             #index_exclude = np.where(self.data[self.SIG][match_1] > self.data[self.SIG][match_2], match_2, match_1)
@@ -109,7 +110,7 @@ class Candidates:
 
         # Geometric cuts
         pix = ugali.utils.healpix.angToPix(4096, self.data['ra'], self.data['dec'], nest=True)
-        mask = ugali.utils.healpix.read_map('healpix_mask_{}.fits.gz'.format(self.survey), nest=True)
+        mask = ugali.utils.healpix.read_map('healpix_mask_{}_v{}.fits.gz'.format(self.survey, version), nest=True)
 
         self.cut_ebv = np.where(mask[pix] & 0b00001, False, True)
         self.cut_associate = np.where(mask[pix] & 0b00010, False, True)
@@ -118,7 +119,7 @@ class Candidates:
         self.cut_footprint = np.where(mask[pix] & 0b10000, False, True)
         if self.survey == 'ps1' and self.alg == 'ugali':
             self.cut_footprint &= np.where(mask[pix] & 0b100000, False, True) # Add failures to footprint cut 
-            self.cut_footprint &= np.where(mask[pix] & 0b1000000, False, True) # Add artifacts to footprint cut
+        #self.cut_footprint &= np.where(mask[pix] & 0b1000000, False, True) # Add artifacts to footprint cut
 
         # Other cuts (modulus, size, shape)
         if self.survey == 'ps1':
@@ -340,9 +341,9 @@ class Candidates:
         fig = plt.figure(figsize=(6.0,5.0))
         ax = fig.add_subplot(111)
         if self.alg == 'simple':
-            bins = np.arange(5., 40.25, 0.5)
+            bins = np.arange(0., 40.0, 0.5) # n=81 bins
         elif self.alg == 'ugali':
-            bins = np.logspace(np.log10(10.), np.log10(200000.), num=70)
+            bins = np.logspace(np.log10(10.), np.log10(230500.), num=81)
             plt.xscale('log')
         plt.yscale('log')
         ax.hist(self.data[self.SIG], bins=bins, color='red', histtype='step', cumulative=-1, label='All')
@@ -366,6 +367,9 @@ class Candidates:
             plt.text(0.9, 0.55, self.survey.upper(), transform=ax.transAxes, horizontalalignment='left', fontsize=12, weight='bold')
         plt.xlabel(self.SIG)
         plt.ylabel('Cumulative Count')
+
+        ax.axvline(self.threshold, color='gray', linestyle='-', linewidth=1.0)
+
         subprocess.call('mkdir -p diagnostic_plots'.split())
         plt.savefig('diagnostic_plots/significance_distribution_{}_{}.png'.format(self.survey, self.alg), bbox_inches='tight')
 

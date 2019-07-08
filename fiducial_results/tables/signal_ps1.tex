@@ -1,5 +1,9 @@
 \documentclass[twocolumns,tighten]{aastex61}
 \begin{document}
+\newcommand{\knownnotes}{
+\tablenotetext{a}{Cut from ugali results due to distance modulus cut.}
+\tablenotetext{b}{Cut from simple results due to distance modulus cut.}
+\tablenotetext{c}{Cut from results due to location on Pan-STARRS footprint ($\delta < -25.0$ deg).}}
 \begin{deluxetable*}{lccccccccccc}
 \tabletypesize{\scriptsize}
 \tablewidth{0pc}
@@ -7,11 +11,11 @@
 \tablecaption{\knowncaption}
 \tablehead{
 \colhead{(1)} & \colhead{(2)} & \colhead{(3)} & \colhead{(4)} & \colhead{(5)} & \colhead{(6)} & \colhead{(7)} & \colhead{(8)} & \colhead{(9)} & \colhead{(10)} & \colhead{(11)} & \colhead{(12)} \\
- \colhead{Name} & \colhead{$\sqrt{\mathrm{TS}}$} & \colhead{SIG} & \colhead{$P_{\rm det}$} & \colhead{RA} & \colhead{Dec} & \colhead{$m - M$} & \colhead{$r_{1/2}$} & \colhead{Distance} & \colhead{$r_{1/2}$} & \colhead{$M_V$} & \colhead{Ref.} \\
+ \colhead{Name} & \colhead{$\sqrt{\mathrm{TS}}$} & \colhead{SIG} & \colhead{$P_{\rm det} \hspace{0.3in}$} & \colhead{RA} & \colhead{Dec} & \colhead{$m - M$} & \colhead{$r_{1/2}$} & \colhead{Distance} & \colhead{$r_{1/2}$} & \colhead{$M_V$} & \colhead{Ref.} \\
  \colhead{} & \colhead{} & \colhead{} & \colhead{} & \colhead{(deg)} & \colhead{(deg)} & \colhead{} & \colhead{($'$)} & \colhead{(kpc)} & \colhead{(pc)} & \colhead{(mag)} & \colhead{}  }
 \startdata
-Leo I & 157.6 & 37.5 & 1.00 & 152.12 & 12.31 & 22.1 & 3.6 & 258 & 274 & -11.8 & 1\\
-Leo II & 104.1 & 37.5 & 1.00 & 168.37 & 22.15 & 21.8 & 2.5 & 233 & 171 & -9.7 & 1\\
+Leo I\tablenotemark{a} & 157.6 & 37.5 & 1.00 & 152.12 & 12.31 & 22.1 & 3.6 & 258 & 274 & -11.8 & 1\\
+Leo II\tablenotemark{a} & 104.1 & 37.5 & 1.00 & 168.37 & 22.15 & 21.8 & 2.5 & 233 & 171 & -9.7 & 1\\
 Draco & 96.9 & 37.5 & 1.00 & 260.05 & 57.92 & 19.4 & 9.7 & 76 & 213 & -8.7 & 1\\
 Ursa Minor & 83.1 & 37.5 & 0.99 & 227.29 & 67.22 & 19.4 & 18.3 & 76 & 406 & -9.0 & 1\\
 Sextans & 58.6 & 24.6 & 0.99 & 153.26 & -1.61 & 19.8 & 16.5 & 93 & 444 & -8.7 & 1\\
@@ -29,20 +33,20 @@ Ursa Major I & 10.2 & 6.0 & 0.00 & 158.72 & 51.92 & 19.9 & 8.3 & 97 & 235 & -5.1
 Draco II & 9.8 & 7.9 & 0.95 & 238.20 & 64.57 & 16.9 & 2.7 & 20 & 16 & -2.9 & 2\\
 Triangulum II & 9.5 & 6.8 & 0.26 & 33.32 & 36.18 & 17.3 & 2.0 & 28 & 16 & -1.6 & 1\\
 Hercules I & 9.1 & 6.4 & 0.09 & 247.76 & 12.79 & 20.6 & 5.6 & 132 & 216 & -5.8 & 1\\
-Leo IV & 8.2 & 4.9 & 0.02 & 173.24 & -0.53 & 20.9 & 2.5 & 154 & 114 & -5.0 & 1\\
+Leo IV\tablenotemark{b} & 8.2 & 4.9 & 0.02 & 173.24 & -0.53 & 20.9 & 2.5 & 154 & 114 & -5.0 & 1\\
 Cetus II & 7.4 & 6.1 & 0.00 & 19.47 & -17.42 & 17.4 & 1.9 & 30 & 17 & 0.0 & 2\\
 Aquarius II & 7.3 & 5.1 & 0.00 & 338.48 & -9.33 & 20.2 & \ldots & 108 & \ldots & \ldots & 4\\
 Leo V & 7.0 & \ldots & 0.02 & 172.79 & 2.22 & 21.3 & 2.6 & 178 & 134 & -5.3 & 2\\
 Pisces II & 6.3 & 4.4 & 0.00 & 344.63 & 5.95 & 21.4 & 1.1 & 187 & 61 & -4.2 & 1\\
-Columba I & 6.1 & 5.3 & 0.00 & 82.86 & -28.03 & 21.3 & 1.9 & 183 & 101 & -4.5 & 2\\
+Columba I\tablenotemark{b}\tablenotemark{c} & 6.1 & 5.3 & 0.00 & 82.86 & -28.03 & 21.3 & 1.9 & 183 & 101 & -4.5 & 2\\
 Bootes II & 6.0 & 6.5 & 0.04 & 209.50 & 12.85 & 18.1 & 3.2 & 42 & 39 & -2.9 & 1\\
 Bootes III & 5.6 & 4.7 & 1.00 & 209.30 & 26.80 & 18.4 & \ldots & 47 & \ldots & -5.8 & 2\\
-Bootes IV & 5.4 & 4.7 & \ldots & 233.69 & 43.73 & \ldots & \ldots & \ldots & \ldots & \ldots & \ldots\\
+Bootes IV\tablenotemark{b} & 5.4 & 4.7 & \ldots & 233.69 & 43.73 & \ldots & \ldots & \ldots & \ldots & \ldots & \ldots\\
 Pegasus III & 4.8 & \ldots & 0.00 & 336.09 & 5.42 & 21.7 & 1.3 & 215 & 81 & -4.1 & 2\\
 Virgo I & 4.1 & 4.1 & 0.00 & 180.04 & -0.68 & 19.8 & 1.8 & 91 & 47 & -0.3 & 5\\
 Cetus III & \ldots & 4.6 & 0.00 & 31.33 & -4.27 & 22.0 & \ldots & 251 & \ldots & \ldots & 5\\
 \enddata
-{\footnotesize \tablecomments{\knowncomments References: (1) 2018ApJ...860...66M, (5) 2018PASJ...70S..18H, (4) 2016MNRAS.463..712T, (2) 2012AJ....144....4M, (3) 2016MNRAS.459.2370T, }}
+{\footnotesize \tablecomments{\knowncomments References: (1) 2018ApJ...860...66M, (2) 2012AJ....144....4M, (3) 2016MNRAS.459.2370T, (4) 2016MNRAS.463..712T, (5) 2018PASJ...70S..18H}}
 \knownnotes
 \end{deluxetable*}
 \end{document}

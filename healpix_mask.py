@@ -127,19 +127,19 @@ def main(survey, plot=True, write=True):
         
         # Artifact masks
         artifact_coords = np.array([
-            (278.72, 38.55), # J1834.8+3840, obvious masking issue
-            (34.97, -3.04), # J0220.1-0302, psf failures
-            (201.43, -11.44), # J1326.4-1128, obvious masking issue
-            (214.56, 19.04), # J1418.1+1912, obvious masking issue
+            (278.70, 38.67), # J1834.8+3840, obvious masking issue
+            (35.01, -3.04), # J0220.1-0302, psf failures
+            (201.59, -11.47), # J1326.4-1128, obvious masking issue
+            (214.52, 19.20), # J1418.1+1912, obvious masking issue
             #(131.50, 28.57), # J0846.0+2834, ???
-            (262.56, 52.1), # J1730.7+5206, likely artifact
-            #(170.01, -14.99), # J1120.0-1457, ???
-            (186.6, 46.2), # J1226.2+4609, likely artifact
+            (262.66, 52.11), # J1730.7+5206, likely artifact
+            #(169.99, -14.96), # J1120.0-1457, ???
+            (186.55, 46.17), # J1226.2+4609, likely artifact
             (145.22, -13.74), # J0940.9-1344, likely artifact
             (28.11, 19.39), # J0152.5+1923, no uglai source?
             #(247.73, -0.97), # J1630.9+0058, real star cluster
-            (19.4, -17.51)]) # J0117.6-1726, Cetus II
-            #(39.88, 0.18), not sure where this came from
+            (19.40, -17.44)]) # J0117.6-1726, Cetus II
+            #(39.88, 0.18)]) # J0239.5+0010, 
         artifact_ras, artifact_decs = artifact_coords.T
         artifact_cut = cut_circles(artifact_ras, artifact_decs, default_radius=0.1)
         healpix_mask[artifact_cut] |= 0b1000000 
@@ -149,7 +149,7 @@ def main(survey, plot=True, write=True):
         simplified_mask = np.copy(healpix_mask)
         cut_catalog = np.where((simplified_mask & 0b00010) | (simplified_mask & 0b00100) | (simplified_mask & 0b01000))
         cut_ebv = np.where(simplified_mask & 0b00001)
-        cut_footprint = np.where((simplified_mask & 0b10000) | (simplified_mask & 0b100000))
+        cut_footprint = np.where((simplified_mask & 0b10000) | (simplified_mask & 0b100000) | (simplified_mask & 0b1000000))
         simplified_mask[cut_catalog] = 1
         simplified_mask[cut_ebv] = 2
         simplified_mask[cut_footprint] = 3

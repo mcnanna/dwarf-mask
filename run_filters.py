@@ -10,27 +10,6 @@ from filter_candidates import Candidates
 import make_nice_tables
 
 # Define significances
-#highsigdict = {
-#        ('ps1','simple'):6.,
-#        ('ps1','ugali'):80.,
-#        ('des','simple'):7.,
-#        ('des','ugali'):50.
-#        }
-#
-#lowsigdict = {
-#        ('ps1','simple'):5.,
-#        ('ps1','ugali'):50.,
-#        ('des','simple'):7.,
-#        ('des','ugali'):30.
-#        }
-
-testsigdict = {
-        ('ps1','simple'):6.,
-        ('ps1','ugali'):50,
-        ('des','simple'):7.,
-        ('des','ugali'):8**2
-        }
-
 conservativesigdict = {
         ('ps1','simple'):7.,
         ('ps1','ugali'):7**2,
@@ -71,27 +50,33 @@ make_nice_tables.remains_table("tables/remains.tex", remains_des, remains_ps1, a
 subprocess.call("pdflatex -interaction nonstopmode -output-directory tables tables/remains.tex".split())
 
 # Combine sighists into one plot
-# This is pretty specialized to get it into a good format for the paper
 def sighist(cands, ax, legend=True, title=True, text=True, xlabel=True, ylabel=True):
-    if cands.SIG == 'TS':
-        cands.data['TS'] = np.clip(np.sqrt(cands.data['TS']), 0, 100)
+    fiducial_threshold = fiducialsigdict[(cands.survey, cands.alg)]
+    conservative_threshold = conservativesigdict[(cands.survey, cands.alg)]
 
     if cands.alg == 'simple':
-        bins = np.linspace(5., 40., num=71) # step = 0.5
+        sigs = cands.data['SIG']
+        bins = np.arange(0., 40., 0.5) # step=0.5, sigs max out at 37.5
+        axis_label = 'SIG'
     elif cands.alg == 'ugali':
-        bins = np.linspace(5., 100.5, num=71)
-        #bins = np.logspace(np.log10(10.), np.log10(200000.), num=70)
-        #ax.set_xscale('log')
-    ax.set_ylim(0.7, 2.5*10**4)
+        sigs = np.sqrt(cands.data['TS'])
+        bins = np.arange(3.0, 481, 0.5) # Lowest sqrt(TS) is sqrt(10) = 3.2
+        axis_label = r'$\sqrt{\mathrm{TS}}$'
+        ax.set_xlim(left=None, right=51.0)
+
+        fiducial_threshold = np.sqrt(fiducial_threshold)
+        conservative_threshold = np.sqrt(conservative_threshold)
+
+    ax.set_ylim(0.5, 2.5*10**5)
     ax.set_yscale('log')
-    ax.hist(cands.data[cands.SIG], bins=bins, color='red', histtype='step', cumulative=-1, label='All')
-    ax.hist(cands.data[cands.SIG][cands.cut_ebv & cands.cut_footprint], bins=bins, color='blue', histtype='step', cumulative=-1, label= r'In footprint & $E(B-V) < 0.2$ mag')
-    #ax.hist(cands.data[cands.SIG][cands.cut_ebv & cands.cut_footprint & cands.cut_modulus], bins=bins, color='darkturquoise', histtype='step', cumulative=-1, label=r'above & $m - M < {}$'.format(21.75 if cands.survey == 'ps1' else 23.5))
-    #ax.hist(cands.data[cands.SIG][cands.cut_ebv & cands.cut_footprint & cands.cut_modulus & cands.cut_bsc], bins=bins, color='orange', histtype='step', cumulative=-1, label='above & no bright star assoc.') 
-    ax.hist(cands.data[cands.SIG][cands.cut_ebv & cands.cut_footprint & cands.cut_modulus & cands.cut_associate & cands.cut_bsc], bins=bins, color='green', histtype='step', cumulative=-1, label='above & no catalog assoc.') # = cands.cut_bulk
-    ax.hist(cands.data[cands.SIG][cands.cut_bulk & cands.cut_dwarfs], bins=bins, color='purple', histtype='step', cumulative=-1, label='above & no known dwarf assoc.')
+    ax.hist(sigs, bins=bins, color='red', histtype='step', cumulative=-1, label='All')
+    ax.hist(sigs[cands.cut_ebv & cands.cut_footprint], bins=bins, color='blue', histtype='step', cumulative=-1, label= r'In footprint & $E(B-V) < 0.2$ mag')
+    #ax.hist(sigs[cands.cut_ebv & cands.cut_footprint & cands.cut_modulus], bins=bins, color='darkturquoise', histtype='step', cumulative=-1, label=r'above & $m - M < {}$'.format(21.75 if cands.survey == 'ps1' else 23.5))
+    #ax.hist(sigs[cands.cut_ebv & cands.cut_footprint & cands.cut_modulus & cands.cut_bsc], bins=bins, color='orange', histtype='step', cumulative=-1, label='above & no bright star assoc.') 
+    ax.hist(sigs[cands.cut_ebv & cands.cut_footprint & cands.cut_modulus & cands.cut_associate & cands.cut_bsc], bins=bins, color='green', histtype='step', cumulative=-1, label='above & no catalog assoc.') # = cands.cut_bulk
+    ax.hist(sigs[cands.cut_bulk & cands.cut_dwarfs], bins=bins, color='purple', histtype='step', cumulative=-1, label='above & no known dwarf assoc.')
     if cands.cross:
-        ax.hist(cands.data[cands.SIG][cands.cut_bulk & cands.cut_dwarfs & cands.cut_cross], bins=bins, color='black', histtype='step', cumulative=-1, label='above & found by both algorithms') 
+        ax.hist(sigs[cands.cut_bulk & cands.cut_dwarfs & cands.cut_cross], bins=bins, color='black', histtype='step', cumulative=-1, label='above & found by both algorithms') 
     if legend:
         handles, labels = ax.get_legend_handles_labels()
         new_handles = [Line2D([], [], c=h.get_edgecolor()) for h in handles]
@@ -104,14 +89,13 @@ def sighist(cands, ax, legend=True, title=True, text=True, xlabel=True, ylabel=T
         ax.set_ylabel(' '*8+ cands.survey.upper(), rotation=0, horizontalalignment='right') # Without extra spaces, it overlaps the subplot outline
         ax.yaxis.set_label_position("right")
     if xlabel:
-        if cands.SIG == 'SIG':
-            xlabel = 'SIG'
-        elif cands.SIG == 'TS':
-            xlabel = r'$\sqrt{\mathrm{TS}}$'
-        ax.set_xlabel(xlabel)
+        ax.set_xlabel(axis_label)
     if ylabel:
         ax.set_ylabel('Cumulative Count')
 
+    ax.axvline(fiducial_threshold, color='gray', linestyle='-', linewidth=1.0)
+    ax.axvline(conservative_threshold, color='gray', linestyle='--', linewidth=1.0)
+    
 fig, axes = plt.subplots(nrows=2, ncols=2, sharex='col', sharey='all', figsize=(9, 7.5))
 sighist(des_simple, axes[0,0], title=True, text=False, legend=False, xlabel=False, ylabel=True)
 sighist(des_ugali, axes[0,1], title=True, text=True, legend=True, xlabel=False, ylabel=False)

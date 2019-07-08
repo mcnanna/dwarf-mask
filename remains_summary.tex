@@ -1,44 +1,29 @@
 \documentclass[twocolumns,tighten]{aastex61}
 \begin{document}
-\begin{deluxetable*}{lccc}
+\begin{deluxetable*}{lcccc}
 \tablewidth{0pc}
-\tablecolumns{4}
+\tablecolumns{5}
 \tablehead{
-\colhead{} & \colhead{ugali} & \colhead{simple} & \colhead{both}}
+\colhead{} & \colhead{ugali} & \colhead{simple} & \colhead{both} & \colhead{\% recovered}}
 \startdata
-DES & TS $> 30$ & SIG $> 7$ & \\
-& 47 & 12 & 1 \\
+\multicolumn{5}{c}{``Conservative"} \\
+DES & $\sqrt{\rm TS} > 8$ & SIG $> 7$ & & \\
+& 3 & 28 & 0 & 18/20 \\
 \hline
-DES & TS $> 40$ & SIG $> 7$ & \\
-& 9 & 12 & 1 \\
+Pan-STARRS &  $\sqrt{\rm TS} > 7$ & SIG $> 7$ & &\\
+& 174 & 76 & 9 & 15/31 \\
+%Pan-STARRS, no artifacts &  & & &\\
+%& 168 & 70 & 3 &  \\
 \hline
-DES & TS $> 50$ & SIG $> 7$ & \\
-& 5 & 12 & 1 \\
 \hline
+\multicolumn{5}{c}{``Fiducial"} \\
+DES & $\sqrt{\rm TS} > 6$ & SIG $> 6$ & & \\
+& 15 & 116 & 1 & 18/20 \\
 \hline
-Pan-STARRS &  TS $> 50$ & SIG $> 5$ & \\
-& 143 & 2259 & 22 \\
-\hline
-Pan-STARRS &  TS $> 60$ & SIG $> 5$ & \\
-& 103 & 2259 & 15 \\
-\hline
-Pan-STARRS &  TS $> 70$ & SIG $> 5$ & \\
-& 83 & 2259 & 15 \\
-\hline
-Pan-STARRS &  TS $> 80$ & SIG $> 5$ & \\
-& 65 & 2259 & 14\\
-\hline
-Pan-STARRS &  TS $> 50$ & SIG $> 6$ & \\
-& 143 & 97 & 12 \\
-\hline
-Pan-STARRS &  TS $> 60$ & SIG $> 6$ & \\
-& 103 & 97 & 9 \\
-\hline
-Pan-STARRS &  TS $> 70$ & SIG $> 6$ & \\
-& 83 & 97 & 9 \\
-\hline
-Pan-STARRS &  TS $> 80$ & SIG $> 6$ & \\
-& 65 & 97 & 9 \\
+Pan-STARRS &  $\sqrt{\rm TS} > 6$ & SIG $> 6$ & &\\
+& 399 & 147 & 13 & 21/31 \\
+%Pan-STARRS, no artifacts &  &  & &\\
+%& 393 & 138 & 4 &  \\
 \enddata
 \end{deluxetable*}
 \end{document}

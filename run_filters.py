@@ -71,12 +71,11 @@ def sighist(cands, ax, legend=True, title=True, text=True, xlabel=True, ylabel=T
     ax.set_yscale('log')
     ax.hist(sigs, bins=bins, color='red', histtype='step', cumulative=-1, label='All')
     ax.hist(sigs[cands.cut_ebv & cands.cut_footprint], bins=bins, color='blue', histtype='step', cumulative=-1, label= r'In footprint & $E(B-V) < 0.2$ mag')
-    #ax.hist(sigs[cands.cut_ebv & cands.cut_footprint & cands.cut_modulus], bins=bins, color='darkturquoise', histtype='step', cumulative=-1, label=r'above & $m - M < {}$'.format(21.75 if cands.survey == 'ps1' else 23.5))
-    #ax.hist(sigs[cands.cut_ebv & cands.cut_footprint & cands.cut_modulus & cands.cut_bsc], bins=bins, color='orange', histtype='step', cumulative=-1, label='above & no bright star assoc.') 
-    ax.hist(sigs[cands.cut_ebv & cands.cut_footprint & cands.cut_modulus & cands.cut_associate & cands.cut_bsc], bins=bins, color='green', histtype='step', cumulative=-1, label='above & no catalog assoc.') # = cands.cut_bulk
-    ax.hist(sigs[cands.cut_bulk & cands.cut_dwarfs], bins=bins, color='purple', histtype='step', cumulative=-1, label='above & no known dwarf assoc.')
+    ax.hist(sigs[cands.cut_ebv & cands.cut_footprint & cands.cut_associate & cands.cut_bsc], bins=bins, color='green', histtype='step', cumulative=-1, label='& no catalog assoc.') # =
+    ax.hist(sigs[cands.cut_ebv & cands.cut_footprint & cands.cut_associate & cands.cut_bsc & cands.cut_dwarfs], bins=bins, color='darkorange', histtype='step', cumulative=-1, label='& no known dwarf assoc.')
+    ax.hist(sigs[cands.cut_ebv & cands.cut_footprint & cands.cut_associate & cands.cut_bsc & cands.cut_dwarfs & cands.cut_modulus], bins=bins, color='purple', histtype='step', cumulative=-1, label='& within distance limit')
     if cands.cross:
-        ax.hist(sigs[cands.cut_bulk & cands.cut_dwarfs & cands.cut_cross], bins=bins, color='black', histtype='step', cumulative=-1, label='above & found by both algorithms') 
+        ax.hist(sigs[cands.cut_bulk & cands.cut_dwarfs & cands.cut_cross], bins=bins, color='black', histtype='step', cumulative=-1, label='& found by both algorithms') 
     if legend:
         handles, labels = ax.get_legend_handles_labels()
         new_handles = [Line2D([], [], c=h.get_edgecolor()) for h in handles]
@@ -95,6 +94,7 @@ def sighist(cands, ax, legend=True, title=True, text=True, xlabel=True, ylabel=T
 
     ax.axvline(fiducial_threshold, color='gray', linestyle='-', linewidth=1.0)
     ax.axvline(conservative_threshold, color='gray', linestyle='--', linewidth=1.0)
+
     
 fig, axes = plt.subplots(nrows=2, ncols=2, sharex='col', sharey='all', figsize=(9, 7.5))
 sighist(des_simple, axes[0,0], title=True, text=False, legend=False, xlabel=False, ylabel=True)

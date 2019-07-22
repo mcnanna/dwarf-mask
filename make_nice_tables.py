@@ -3,7 +3,7 @@
 import numpy as np
 from textable import TexTable
 
-def signal_table(outname, *signals):
+def signal_table(outname, *signals, **kwargs):
     #if len(signals) > 1:
     #    nonoverlap = np.array([i for i in range(len(signals[1])) if signals[1][i]['name'] not in signals[0]['name']])
     #    signal[1] = signal[1][nonoverlap]
@@ -60,7 +60,13 @@ def signal_table(outname, *signals):
     ref_dict_str = ("({}) {}, "*len(ref_dict)).format(*np.array([(ref_dict[key], key) for key in ref_dict.keys()]).flatten())
 
     justs = 'lccccccccccc'
-    t = TexTable(len(justs), justs=justs, comments="\\knowncomments" + " References: " + ref_dict_str, caption="\\knowncaption", notes="\\knownnotes", fontsize="\\scriptsize", doc=True)
+    
+    comments = kwargs['comments'] if 'comments' in kwargs.keys() else "\\knowncomments"
+    comments += " References: " + ref_dict_str
+    caption = kwargs['caption'] if 'caption' in kwargs.keys() else "\\knowncaption"
+    notes = kwargs['notes'] if 'notes' in kwargs.keys() else "\\knownnotes"
+
+    t = TexTable(len(justs), justs=justs, comments=comments, caption=caption, notes=notes, fontsize="\\scriptsize", doc=True)
     t.add_header_row(['({})'.format(i+1) for i in range(len(justs))])
     t.add_header_row(
             ['Name', r'$\sqrt{\mathrm{TS}}$', 'SIG', r"$P_{\rm det}$",

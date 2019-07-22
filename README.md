@@ -1,27 +1,65 @@
-This is hopelessly out of date. I'll update it eventually. In the meantime, just concact me if you want to know how to use the code.
+If you want a better explanation, please contact me and I'll be happy to explain things more thouroughly. 
 
-# dwarf-mask
-Masking and candidate filtering for dwarf searches in PS1 and DES. 
-Creates two masks, one for DES and one for PS1.
-Applies the masks and filters candidates coming from the output of from either the simple or ugali search algorithm. 
+# Script overview
 
-## Making the mask
-The code for this is healpix_mask.py. The mask has
-NSIDE = 4096,
-COOORD = CEL,
-ORDERING = NESTED.
+## `run_filters.py`
+This is the main driving script. The significance thresholds are defined and set at the top of the script. Running the script will create four `Candidates` objects,
+one for each survey/algorithm combination. It will then created fits files, tables, and diagnostic plots, saved into directories with those names. 
 
-It creates a bit mask, with 0 being a good pixel and non-zero being bad for some reason. The meaning of each bit may change, but right now:
-00001: E(B-V) > 0.2
-00010: Within the radius of an object in most catalogs in $UGALIDIR/catalogs
-00100: Within the radius of an object in McConnachie15 and ExtraDwarf catalofs in $UGALIDIR/catalogs
-01000: Within 0.1 deg of star in the Yale bright star catalog
-10000: Outside of footprint
+## `filter_candidates.py`
+The `Candidates` object defined in this script does most of the work of filtering through the seeds returned by the search algorithms. It applies the healpix masks created by `healpix_mask.py`, as well as additional cuts. The relting object has a `data` attribute which is unfiltered seeds, as well as several `cut_cuttype` attributes which can be applied to the data for filtering. It then has several methods such as `write_signal` and `sighist` which will write the results to file and create plots. 
 
-If a radius is not given in the object catalogs, it defaults to 0.1 deg. 
-The footprint for Pan-STARRS is defined as dec > -25. 
+## `make_nice_tables.py`
+This script reads in the results from using `filter_candidates.py` and puts them into nice LaTeX tables. 
 
-## Applying the mask and filtering candidates
-filter_candidates.py uses the mask plus additional cuts to filter candidate .fits files located in the "candidates" directory. It expects the files to be of the form candidate_list_survey_alg.fits, where survey is one of des or ps1, and alg is one of ugali or simple. The code makes some diagnostic plots and writes the results to .txt files, which are converted into LaTeX tables. 
-In particular, it writes a signal.txt file showing how well known satellites are recovered, and a remains.txt file listing unassociated candidate hotspots. If possible, it will also write a remains_both.txt file showing hotspots which were found in both search algorithms. 
-It generates a cumulative histogram of the results as a function of significance, showing counts for each level of cuts. 
+## `healpix_mask.py`
+This is the script which creates the healpix masks. 
+
+# Details
+
+## Healpix masks
+The masks all use
+NSIDE = 4096
+COORD = CEL
+ORDERING = NESTED
+
+The bits correspond to
+0000000: unmasked
+0000001: E(B-V) > 0.2
+0000010: Near cataloged object
+0000100: Near known dwarf (McConnachie15 + ExtraDwarfs)
+0001000: Near bright star in Yale BSC.
+0010000: Outside of footprint
+0100000: ugali processing failure
+1000000: Spurious artifact (Used for PS1 data)
+
+"Near" here specifically means within the half-light radius listed in the catalogs, but not smaller than 0.05 deg.
+If there's no radius available, the default is 0.1 deg. 
+
+When plotting the masks, the three "catalog" bits are combined, and the failure/artifact bits ard included in the footprint. 
+
+## `Candidates` object
+
+The `Candidates` object takes two inputs, the name of the survey (`des` or `ps1`) and the name of the algorithm (`ugali` or `simple`). 
+It then reads in the candidate seeds, expeceting to find it at `candidates/candidate_list_survey_alg.fits`. 
+Several "cut" attributes are defined based on the bitmasks:
+`cut_ebv`
+`cut_associate`
+`cut_dwarf`
+`cut_bsc`
+`cut_footprint`
+Two other cuts are defined:
+`cut_modulus`
+`cut_sig`
+
+For convenience, the ebv, associate, bsc, footprint, and modulus cuts are combined into `cut_bulk`. 
+Finally, all the cuts (bulk & dwarf & sig) are combined into `cut_final`.
+I lied, there's one more cut. If requested (True by default), a `Candidates` object for the other algorithm will be created and 
+compared with the one for the input algorithm. A `cut_cross` is defined by objects within 0.2 deg of each other passing the `cut_final`
+for both algorithms.
+
+The resulting `Candidates` object ends up with a `signal` array attribute. This is created by running through the objects in 
+McConnachie15 and ExtraDwarfs and matching withing a 0.2 deg radius with the candidate seeds. No cuts are applied, but 
+whether the object was cut and its bit on the bitmask are columns in the resulting array.
+
+There are several methods for writing the results to file, creating LaTeX tables, and plotting. The `doitall()` method does them all. 

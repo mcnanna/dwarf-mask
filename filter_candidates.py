@@ -166,10 +166,6 @@ class Candidates:
                     sig = np.nan
                     a = np.nan
                     modulus = np.nan
-                    #modulus_actual = np.nan
-                    #distance = np.nan
-                    #rhalf = np.nan
-                    #M_V = np.nan
                     bit = mask[ugali.utils.healpix.angToPix(4096, known_dwarf['ra'], known_dwarf['dec'], nest=True)]
                     wascut = ''
 
@@ -188,7 +184,7 @@ class Candidates:
                     distance = lv['distance_kpc']
                     rhalf_obs = lv['rhalf']
                     ellipticity = (lv['ellipticity'] if not np.isnan(lv['ellipticity']) else 0.)
-                    rhalf_phys = (distance*1000.) * np.radians(rhalf_obs/60.) * np.sqrt(1-ellipticity)
+                    rhalf_phys = (distance*1000.) * np.radians(rhalf_obs/60.) * np.sqrt(1-ellipticity) # parsec
                     M_V = lv['m_v']
                     ref = lv['structure_ref']
                     if ref == 'None':
@@ -333,7 +329,12 @@ class Candidates:
         combined_signal = custom_sort(np.array(combined_signal, dtype=dtype), order=['TS', 'SIG'])
         pyfits.writeto('fits_files/signal_{}_both.fits'.format(self.survey), combined_signal, overwrite=True)
         if table:
-            make_nice_tables.signal_table('tables/signal_{}.tex'.format(self.survey), combined_signal)
+            if self.survey == 'des':
+                suffix = 'des'
+            elif self.survey == 'ps1':
+                suffix = 'ps'
+            make_nice_tables.signal_table('tables/signal_{}.tex'.format(self.survey), combined_signal,
+                    comments = "\\knowncomments"+suffix, caption = "\\knowncaption"+suffix, notes = "\\knownnotes"+suffix)
             subprocess.call("pdflatex -interaction nonstopmode -output-directory tables tables/signal_{}.tex".format(self.survey).split())
 
 

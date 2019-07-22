@@ -50,6 +50,8 @@ make_nice_tables.remains_table("tables/remains.tex", remains_des, remains_ps1, a
 subprocess.call("pdflatex -interaction nonstopmode -output-directory tables tables/remains.tex".split())
 
 # Combine sighists into one plot
+plt.rcParams.update({'font.size': 12})
+plt.rcParams.update({'axes.linewidth': 1.2})
 def sighist(cands, ax, legend=True, title=True, text=True, xlabel=True, ylabel=True):
     fiducial_threshold = fiducialsigdict[(cands.survey, cands.alg)]
     conservative_threshold = conservativesigdict[(cands.survey, cands.alg)]
@@ -69,23 +71,23 @@ def sighist(cands, ax, legend=True, title=True, text=True, xlabel=True, ylabel=T
 
     ax.set_ylim(0.5, 2.5*10**5)
     ax.set_yscale('log')
-    ax.hist(sigs, bins=bins, color='red', histtype='step', cumulative=-1, label='All')
-    ax.hist(sigs[cands.cut_ebv & cands.cut_footprint], bins=bins, color='blue', histtype='step', cumulative=-1, label= r'In footprint & $E(B-V) < 0.2$ mag')
-    ax.hist(sigs[cands.cut_ebv & cands.cut_footprint & cands.cut_associate & cands.cut_bsc], bins=bins, color='green', histtype='step', cumulative=-1, label='& no catalog assoc.') # =
-    ax.hist(sigs[cands.cut_ebv & cands.cut_footprint & cands.cut_associate & cands.cut_bsc & cands.cut_dwarfs], bins=bins, color='darkorange', histtype='step', cumulative=-1, label='& no known dwarf assoc.')
-    ax.hist(sigs[cands.cut_ebv & cands.cut_footprint & cands.cut_associate & cands.cut_bsc & cands.cut_dwarfs & cands.cut_modulus], bins=bins, color='purple', histtype='step', cumulative=-1, label='& within distance limit')
+    ax.hist(sigs, bins=bins, color='red', histtype='step', cumulative=-1, linewidth=1.2, label='All')
+    ax.hist(sigs[cands.cut_ebv & cands.cut_footprint], bins=bins, color='blue', histtype='step', cumulative=-1, linewidth=1.2, label= r'In footprint & $E(B-V) < 0.2$ mag')
+    ax.hist(sigs[cands.cut_ebv & cands.cut_footprint & cands.cut_associate & cands.cut_bsc], bins=bins, color='green', histtype='step', cumulative=-1, linewidth=1.2, label='& no catalog association')
+    ax.hist(sigs[cands.cut_ebv & cands.cut_footprint & cands.cut_associate & cands.cut_bsc & cands.cut_dwarfs], bins=bins, color='darkorange', histtype='step', cumulative=-1, linewidth=1.2, label='& no known dwarf association')
+    ax.hist(sigs[cands.cut_ebv & cands.cut_footprint & cands.cut_associate & cands.cut_bsc & cands.cut_dwarfs & cands.cut_modulus], bins=bins, color='purple', histtype='step', cumulative=-1, linewidth=1.2, label='& within distance limit') # = cut_bulk & cut_dwarfs
     if cands.cross:
-        ax.hist(sigs[cands.cut_bulk & cands.cut_dwarfs & cands.cut_cross], bins=bins, color='black', histtype='step', cumulative=-1, label='& found by both algorithms') 
+        ax.hist(sigs[cands.cut_bulk & cands.cut_dwarfs & cands.cut_cross], bins=bins, color='black', histtype='step', cumulative=-1, linewidth=1.2, label='& found by both algorithms') 
     if legend:
         handles, labels = ax.get_legend_handles_labels()
         new_handles = [Line2D([], [], c=h.get_edgecolor()) for h in handles]
-        ax.legend(loc='upper right', handles=new_handles, labels=labels, prop={'size':8})
+        ax.legend(loc='upper right', handles=new_handles, labels=labels, prop={'size':9})
     if title:
         ax.set_title('SimpleBinner' if cands.alg == 'simple' else 'ugali', fontdict={'family': 'monospace'})
     else:
         ax.set_title(' ')
     if text:
-        ax.set_ylabel(' '*8+ cands.survey.upper(), rotation=0, horizontalalignment='right') # Without extra spaces, it overlaps the subplot outline
+        ax.set_ylabel(' '*8+ cands.survey.upper(), rotation=0, horizontalalignment='right', fontdict={'size':14, 'weight':'medium'}) # Without extra spaces, it overlaps the subplot outline
         ax.yaxis.set_label_position("right")
     if xlabel:
         ax.set_xlabel(axis_label)

@@ -70,7 +70,7 @@ def signal_table(outname, *signals):
                 "Ref."])
     t.add_header_row(
             ['', '', '', '',
-                '(deg)', '(deg)', 
+                r'($\deg$)', r'($\deg$)', 
                 '', r"($'$)",
                 '(kpc)', '(pc)', '(mag)',
                 ''])

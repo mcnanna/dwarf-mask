@@ -180,14 +180,15 @@ class Candidates:
                     modulus_actual = np.nan
                     distance = np.nan
                     rhalf_obs = np.nan
-                    rhalf_pc = np.nan
+                    rhalf_phys = np.nan
                     M_V = np.nan
                     ref = r"\ldots"
                 else:
                     modulus_actual = lv['distance_modulus']
                     distance = lv['distance_kpc']
                     rhalf_obs = lv['rhalf']
-                    rhalf_pc = (distance*1000.) * np.radians(rhalf_obs/60.)
+                    ellipticity = (lv['ellipticity'] if not np.isnan(lv['ellipticity']) else 0.)
+                    rhalf_phys = (distance*1000.) * np.radians(rhalf_obs/60.) * np.sqrt(1-ellipticity)
                     M_V = lv['m_v']
                     ref = lv['structure_ref']
                     if ref == 'None':
@@ -201,11 +202,11 @@ class Candidates:
 
                 if (not (bit & 0b10000)) or (not np.isnan(sig)): # Don't bother writing results for non-detections outside of the footprint
                     if (len(signal) == 0) or (name not in np.array(signal)[:, 0]): # Try to avoid duplicates from the multiple catalogs
-                        signal.append((name, sig, pdet, ra, dec, modulus, modulus_actual, distance, rhalf_obs, rhalf_pc, M_V, a, wascut, bit, ref))
+                        signal.append((name, sig, pdet, ra, dec, modulus, modulus_actual, distance, rhalf_obs, rhalf_phys, M_V, a, wascut, bit, ref))
 
         dtype = [('name','|S18'),(self.SIG, float),('pdet', float),
                 ('ra',float),('dec',float),
-                ('modulus',float),('modulus_actual',float),('distance',float),('rhalf_obs',float),('rhalf_pc',float),('M_V',float),
+                ('modulus',float),('modulus_actual',float),('distance',float),('rhalf_obs',float),('rhalf_phys',float),('M_V',float),
                 ('angsep',float),('cut','|S3'),('bit',int),
                 ('ref','|S24')]
         self.signal = custom_sort(np.array(signal, dtype=dtype), order=self.SIG)
@@ -297,7 +298,7 @@ class Candidates:
                                 uga['ra'][i], uga['dec'][i],
                                 uga['modulus'][i], sim['modulus'][j],
                                 uga['modulus_actual'][i], uga['rhalf_obs'][i], 
-                                uga['distance'][i], uga['rhalf_pc'][i], uga['M_V'][i], 
+                                uga['distance'][i], uga['rhalf_phys'][i], uga['M_V'][i], 
                                 uga['angsep'][i], sim['angsep'][j],
                                 uga['ref'][i]))
                     sim = np.delete(sim, j)
@@ -308,7 +309,7 @@ class Candidates:
                             uga['ra'][i], uga['dec'][i], 
                             uga['modulus'][i], np.nan,
                             uga['modulus_actual'][i], uga['rhalf_obs'][i], 
-                            uga['distance'][i], uga['rhalf_pc'][i], uga['M_V'][i], 
+                            uga['distance'][i], uga['rhalf_phys'][i], uga['M_V'][i], 
                             uga['angsep'][i], np.nan,
                             uga['ref'][i]))
 
@@ -318,7 +319,7 @@ class Candidates:
                             sim['ra'][j], sim['dec'][j],
                             np.nan, sim['modulus'][j],
                             sim['modulus_actual'][j], sim['rhalf_obs'][j], 
-                            sim['distance'][j], sim['rhalf_pc'][j], sim['M_V'][j],
+                            sim['distance'][j], sim['rhalf_phys'][j], sim['M_V'][j],
                             np.nan, sim['angsep'][j],
                             sim['ref'][j]))
         
@@ -326,7 +327,7 @@ class Candidates:
                 ('ra',float),('dec',float),
                 ('mod_ugali',float),('mod_simple',float),
                 ('mod_actual',float),('rhalf_obs',float),
-                ('distance',float),('rhalf_pc',float),('M_V',float),
+                ('distance',float),('rhalf_phys',float),('M_V',float),
                 ('angsep_ugali',float),('angsep_simple',float),
                 ('ref','|S24')]
         combined_signal = custom_sort(np.array(combined_signal, dtype=dtype), order=['TS', 'SIG'])

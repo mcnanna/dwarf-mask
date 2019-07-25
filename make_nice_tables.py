@@ -83,7 +83,7 @@ def signal_table(outname, *signals, **kwargs):
     roundings = [0, 1, 1, 2,
             2, 2, 
             1, 1, 1,
-            0, 0, 1,
+            0, 1, 0,
             0]
     #ignore = ['mod_ugali', 'mod_simple', 'angsep_ugali', 'angsep_simple']
     #t.add_data([signals[0][header] for header in signals[0].dtype.names if header not in ignore], sigfigs=roundings)

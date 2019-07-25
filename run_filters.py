@@ -43,10 +43,11 @@ if not args.load:
         with open(outname, 'wb') as out:
             pickle.dump(obj, out, protocol=pickle.HIGHEST_PROTOCOL)
 
-    save(des_ugali, 'des_ugali.pkl')
-    save(des_simple, 'des_simple.pkl')
-    save(ps1_ugali, 'ps1_ugali.pkl')
-    save(ps1_simple, 'ps1_simple.pkl')
+    subprocess.call("mkdir -p pickles".split()) 
+    save(des_ugali, 'pickles/des_ugali.pkl')
+    save(des_simple, 'pickles/des_simple.pkl')
+    save(ps1_ugali, 'pickles/ps1_ugali.pkl')
+    save(ps1_simple, 'pickles/ps1_simple.pkl')
 
 else:
     def load(fname):
@@ -54,10 +55,10 @@ else:
             obj = pickle.load(in_)
         return obj
 
-    des_ugali = load('des_ugali.pkl')
-    des_simple = load('des_simple.pkl')
-    ps1_ugali = load('ps1_ugali.pkl')
-    ps1_simple = load('ps1_simple.pkl')
+    des_ugali = load('pickles/des_ugali.pkl')
+    des_simple = load('pickles/des_simple.pkl')
+    ps1_ugali = load('pickles/ps1_ugali.pkl')
+    ps1_simple = load('pickles/ps1_simple.pkl')
 
 # Make fits files, tables, and plots for each
 des_ugali.doitall()

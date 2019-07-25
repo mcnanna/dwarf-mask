@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+from argparse import ArgumentParser
+import pickle
 import subprocess
 import numpy as np
 import astropy.io.fits as pyfits
@@ -25,11 +27,37 @@ fiducialsigdict = {
         }
 
 # Filter candidates for each survey/alg combination
-sigdict = fiducialsigdict
-des_ugali = Candidates('des', 'ugali', sigdict=sigdict)
-des_simple = Candidates('des', 'simple', sigdict=sigdict)
-ps1_ugali = Candidates('ps1', 'ugali', sigdict=sigdict)
-ps1_simple = Candidates('ps1', 'simple', sigdict=sigdict)
+
+p = ArgumentParser()
+p.add_argument('-l', '--load', action='store_true', help='Load Candidates objects from pre-made files')
+args = p.parse_args()
+
+if not args.load:
+    sigdict = fiducialsigdict
+    des_ugali = Candidates('des', 'ugali', sigdict=sigdict)
+    des_simple = Candidates('des', 'simple', sigdict=sigdict)
+    ps1_ugali = Candidates('ps1', 'ugali', sigdict=sigdict)
+    ps1_simple = Candidates('ps1', 'simple', sigdict=sigdict)
+
+    def save(obj, outname):
+        with open(outname, 'wb') as out:
+            pickle.dump(obj, out, protocol=pickle.HIGHEST_PROTOCOL)
+
+    save(des_ugali, 'des_ugali.pkl')
+    save(des_simple, 'des_simple.pkl')
+    save(ps1_ugali, 'ps1_ugali.pkl')
+    save(ps1_simple, 'ps1_simple.pkl')
+
+else:
+    def load(fname):
+        with open(fname, 'rb') as in_:
+            obj = pickle.load(in_)
+        return obj
+
+    des_ugali = load('des_ugali.pkl')
+    des_simple = load('des_simple.pkl')
+    ps1_ugali = load('ps1_ugali.pkl')
+    ps1_simple = load('ps1_simple.pkl')
 
 # Make fits files, tables, and plots for each
 des_ugali.doitall()
@@ -40,7 +68,7 @@ ps1_simple.doitall()
 # Combine signals into one big table
 signal_des = pyfits.open("fits_files/signal_des_both.fits")[1].data
 signal_ps1 = pyfits.open("fits_files/signal_ps1_both.fits")[1].data
-make_nice_tables.signal_table("tables/signal.tex", signal_des, signal_ps1)
+make_nice_tables.signal_table("tables/signal.tex", signal_des, signal_ps1, spaced=[4,9,12])
 subprocess.call("pdflatex -interaction nonstopmode -output-directory tables tables/signal.tex".split())
 
 # Combine remains into one big table

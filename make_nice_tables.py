@@ -59,7 +59,7 @@ def signal_table(outname, *signals, **kwargs):
 
     ref_dict_str = ("({}) {}, "*len(ref_dict)).format(*np.array([(ref_dict[key], key) for key in ref_dict.keys()]).flatten())
 
-    justs = 'lccccccccccc'
+    justs = 'lcccccccccccc'
     
     comments = kwargs['comments'] if 'comments' in kwargs.keys() else "\\knowncomments"
     comments += " References: " + ref_dict_str
@@ -71,25 +71,28 @@ def signal_table(outname, *signals, **kwargs):
     t.add_header_row(
             ['Name', r'$\sqrt{\mathrm{TS}}$', 'SIG', r"$P_{\rm det}$",
                 "RA", "Dec",
-                "$m - M$", r"$r_h$",
-                "Distance", r"$r_{1/2}$", r"$M_V$",
+                "$m - M$", r"$a_h$", r"$\epsilon$",
+                "Distance", r"$M_V$", r"$r_{1/2}$", 
                 "Ref."])
     t.add_header_row(
             ['', '', '', '',
                 r'($\deg$)', r'($\deg$)', 
-                '', r"($'$)",
-                '(kpc)', '(pc)', '(mag)',
+                '', r"($'$)", '',
+                '(kpc)', '(mag)', '(pc)',
                 ''])
     roundings = [0, 1, 1, 2,
             2, 2, 
-            1, 1,
+            1, 1, 1,
             0, 0, 1,
             0]
-    ignore = ['mod_ugali', 'mod_simple', 'angsep_ugali', 'angsep_simple']
-    t.add_data([signals[0][header] for header in signals[0].dtype.names if header not in ignore], sigfigs=roundings)
+    #ignore = ['mod_ugali', 'mod_simple', 'angsep_ugali', 'angsep_simple']
+    #t.add_data([signals[0][header] for header in signals[0].dtype.names if header not in ignore], sigfigs=roundings)
+    data_headers = ['name', 'TS', 'SIG', 'pdet', 'ra', 'dec', 'mod_actual', 'ah', 'ellipticity', 'distance', 'M_V', 'r12', 'ref']
+    t.add_data([signals[0][header] for header in data_headers], sigfigs=roundings)
     for signal in signals[1:]:
         t.add_data(['hline']*len(justs))
-        t.add_data([signal[header] for header in signal.dtype.names if header not in ignore], sigfigs=roundings)
+        #t.add_data([signal[header] for header in signal.dtype.names if header not in ignore], sigfigs=roundings)
+        t.add_data([signal[header] for header in data_headers], sigfigs=roundings)
     t.print_table(outname)
     # A hack to put in \hline
     with open(outname, 'r+') as f:
@@ -97,7 +100,36 @@ def signal_table(outname, *signals, **kwargs):
         newlines = [(line if 'hline' not in line else '\hline') for line in lines]
         f.seek(0)
         f.write('\n'.join(newlines))
-        #f.truncate()
+        f.truncate()
+
+    # A hack to add spaces after columns
+    if 'spaced' in kwargs.keys():
+        spaced = kwargs['spaced']
+        gaps = [(spaced[i] - spaced[i-1]) if i>0 else spaced[i] for i in range(len(spaced))]
+        
+        with open(outname, 'r+') as f:
+            lines = f.read().splitlines()
+            for i in range(len(lines)):
+                # Add spaces between justifications
+                if justs in lines[i]:
+                    idx = lines[i].find(justs)
+                    newline = lines[i][:idx]
+                    for gap in gaps:
+                        newline += lines[i][idx:idx+gap]
+                        newline += r' @{\hspace{0.3in}} '
+                        idx += gap
+                    newline += lines[i][idx:]
+                    lines[i] = newline
+                # Add spaces in columns heads
+                elif 'colhead' in lines[i]:
+                    heads = lines[i].split(' & ')
+                    for col in spaced:
+                        heads[col-1] += r'\hspace{0.25in}'
+                    lines[i] = (' & ').join(heads)
+
+            f.seek(0)
+            f.write('\n'.join(lines))
+            f.truncate()
 
 
 def remains_table(outname, *remains, **alg):
@@ -115,7 +147,7 @@ def remains_table(outname, *remains, **alg):
         justs = 'l' + justs
         header_row1 = ['Name'] + header_row1
         header_row2 = [''] + header_row2
-        data_headers = ['Name'] + data_headers
+        data_headers = ['name'] + data_headers
         roundings = [0] + roundings
 
     if alg == 'both':
@@ -128,6 +160,8 @@ def remains_table(outname, *remains, **alg):
         header_row2 = ['', '(ugali)', '(simple)', '(deg)', '(deg)', '(ugali)', '(simple)', r"($'$)"]
         data_headers = remains[0].dtype.names
         roundings = [0, 1] + roundings + [1, 2]
+    if 'RA' in remains[0].dtype.names:
+        data_headers = [header.upper() for header in data_headers]
     
     t = TexTable(len(justs), justs=justs, comments="\\candidatecomments", caption="\\candidatecaption", notes="\\knownnotes", fontsize="\\scriptsize", doc=True)
     t.add_header_row(header_row1)

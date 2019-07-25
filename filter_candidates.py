@@ -14,7 +14,7 @@ import ugali.utils.healpix
 import associate
 import make_nice_tables
 
-version = 1.0
+mask_version = 1.0
 fiducialsigdict = {('ps1', 'simple'):6, ('ps1', 'ugali'):6**2, ('des', 'simple'):6, ('des', 'ugali'):6**2}
 
 def custom_sort(signal, order=None):
@@ -110,7 +110,7 @@ class Candidates:
 
         # Geometric cuts
         pix = ugali.utils.healpix.angToPix(4096, self.data['ra'], self.data['dec'], nest=True)
-        mask = ugali.utils.healpix.read_map('healpix_mask_{}_v{}.fits.gz'.format(self.survey, version), nest=True)
+        mask = ugali.utils.healpix.read_map('healpix_mask_{}_v{}.fits.gz'.format(self.survey, mask_version), nest=True)
 
         self.cut_ebv = np.where(mask[pix] & 0b00001, False, True)
         self.cut_associate = np.where(mask[pix] & 0b00010, False, True)
@@ -175,16 +175,19 @@ class Candidates:
                 except IndexError:
                     modulus_actual = np.nan
                     distance = np.nan
-                    rhalf_obs = np.nan
-                    rhalf_phys = np.nan
+                    ah = np.nan
+                    ellipticity = np.nan
+                    r12 = np.nan
                     M_V = np.nan
                     ref = r"\ldots"
                 else:
                     modulus_actual = lv['distance_modulus']
                     distance = lv['distance_kpc']
-                    rhalf_obs = lv['rhalf']
-                    ellipticity = (lv['ellipticity'] if not np.isnan(lv['ellipticity']) else 0.)
-                    rhalf_phys = (distance*1000.) * np.radians(rhalf_obs/60.) * np.sqrt(1-ellipticity) # parsec
+                    ah = lv['rhalf']
+                    ellipticity = lv['ellipticity']
+                    r12 = (distance*1000.) * np.radians(ah/60.) # parsec
+                    if not np.isnan(ellipticity):
+                        r12 *= np.sqrt(1-ellipticity)
                     M_V = lv['m_v']
                     ref = lv['structure_ref']
                     if ref == 'None':
@@ -192,17 +195,23 @@ class Candidates:
 
                 # Get p_det from dictionary (make sure to update if the sigs ever chnge)
                 try:
-                    pdet = pdet_dict[name][0] # pdet_dict[name] is an array with a single element, hence the [0]
+                    pdet = pdet_dict[name]
                 except KeyError:
                     pdet = np.nan
 
                 if (not (bit & 0b10000)) or (not np.isnan(sig)): # Don't bother writing results for non-detections outside of the footprint
                     if (len(signal) == 0) or (name not in np.array(signal)[:, 0]): # Try to avoid duplicates from the multiple catalogs
-                        signal.append((name, sig, pdet, ra, dec, modulus, modulus_actual, distance, rhalf_obs, rhalf_phys, M_V, a, wascut, bit, ref))
+                        signal.append((name, sig, pdet,
+                            ra, dec,
+                            modulus, modulus_actual, ah, ellipticity,
+                            distance, M_V, r12,
+                            a, wascut, bit,
+                            ref))
 
         dtype = [('name','|S18'),(self.SIG, float),('pdet', float),
                 ('ra',float),('dec',float),
-                ('modulus',float),('modulus_actual',float),('distance',float),('rhalf_obs',float),('rhalf_phys',float),('M_V',float),
+                ('modulus',float),('modulus_actual',float),('ah',float),('ellipticity',float),
+                ('distance',float),('M_V',float),('r12',float),
                 ('angsep',float),('cut','|S3'),('bit',int),
                 ('ref','|S24')]
         self.signal = custom_sort(np.array(signal, dtype=dtype), order=self.SIG)
@@ -240,10 +249,10 @@ class Candidates:
     # Write sorted remains to .fits and make a TeX table
     def write_remains(self, table=True):
         subprocess.call('mkdir -p fits_files'.split())
-        pyfits.writeto('fits_files/remains_{}_{}.fits'.format(self.survey, self.alg), np.sort(self.data[self.cut_final], order=self.SIG)[::-1], overwrite=True)
+        pyfits.writeto('fits_files/remains_{}_{}.fits'.format(self.survey, self.alg), np.sort(np.array(self.data)[self.cut_final], order=self.SIG)[::-1], overwrite=True)
         if table:
             subprocess.call('mkdir -p tables'.split())
-            make_nice_tables.remains_table('tables/remains_{}_{}.tex'.format(self.survey, self.alg), np.sort(self.data[self.cut_final], order=self.SIG)[::-1], alg=self.alg)
+            make_nice_tables.remains_table('tables/remains_{}_{}.tex'.format(self.survey, self.alg), np.sort(np.array(self.data)[self.cut_final], order=self.SIG)[::-1], alg=self.alg)
             subprocess.call("pdflatex -interaction nonstopmode -output-directory tables tables/remains_{}_{}.tex".format(self.survey, self.alg).split())
 
     def write_cross_remains(self, table=True):
@@ -293,8 +302,8 @@ class Candidates:
                             (name, uga['TS'][i], sim['SIG'][j], uga['pdet'][i],
                                 uga['ra'][i], uga['dec'][i],
                                 uga['modulus'][i], sim['modulus'][j],
-                                uga['modulus_actual'][i], uga['rhalf_obs'][i], 
-                                uga['distance'][i], uga['rhalf_phys'][i], uga['M_V'][i], 
+                                uga['modulus_actual'][i], uga['ah'][i], uga['ellipticity'][i],
+                                uga['distance'][i], uga['r12'][i], uga['M_V'][i], 
                                 uga['angsep'][i], sim['angsep'][j],
                                 uga['ref'][i]))
                     sim = np.delete(sim, j)
@@ -304,8 +313,8 @@ class Candidates:
                         (name, uga['TS'][i], np.nan, uga['pdet'][i],
                             uga['ra'][i], uga['dec'][i], 
                             uga['modulus'][i], np.nan,
-                            uga['modulus_actual'][i], uga['rhalf_obs'][i], 
-                            uga['distance'][i], uga['rhalf_phys'][i], uga['M_V'][i], 
+                            uga['modulus_actual'][i], uga['ah'][i], uga['ellipticity'][i],
+                            uga['distance'][i], uga['r12'][i], uga['M_V'][i], 
                             uga['angsep'][i], np.nan,
                             uga['ref'][i]))
 
@@ -314,16 +323,16 @@ class Candidates:
                         (sim['name'][j], np.nan, sim['SIG'][j], sim['pdet'][j],
                             sim['ra'][j], sim['dec'][j],
                             np.nan, sim['modulus'][j],
-                            sim['modulus_actual'][j], sim['rhalf_obs'][j], 
-                            sim['distance'][j], sim['rhalf_phys'][j], sim['M_V'][j],
+                            sim['modulus_actual'][j], sim['ah'][j], sim['ellipticity'][j],
+                            sim['distance'][j], sim['r12'][j], sim['M_V'][j],
                             np.nan, sim['angsep'][j],
                             sim['ref'][j]))
         
         dtype=[('name','|S18'),('TS',float),('SIG',float),('pdet',float),
                 ('ra',float),('dec',float),
                 ('mod_ugali',float),('mod_simple',float),
-                ('mod_actual',float),('rhalf_obs',float),
-                ('distance',float),('rhalf_phys',float),('M_V',float),
+                ('mod_actual',float),('ah',float),('ellipticity',float),
+                ('distance',float),('r12',float),('M_V',float),
                 ('angsep_ugali',float),('angsep_simple',float),
                 ('ref','|S24')]
         combined_signal = custom_sort(np.array(combined_signal, dtype=dtype), order=['TS', 'SIG'])
@@ -334,7 +343,8 @@ class Candidates:
             elif self.survey == 'ps1':
                 suffix = 'ps'
             make_nice_tables.signal_table('tables/signal_{}.tex'.format(self.survey), combined_signal,
-                    comments = "\\knowncomments"+suffix, caption = "\\knowncaption"+suffix, notes = "\\knownnotes"+suffix)
+                    comments = "\\knowncomments"+suffix, caption = "\\knowncaption"+suffix, notes = "\\knownnotes"+suffix,
+                    spaced = [4, 9, 12])
             subprocess.call("pdflatex -interaction nonstopmode -output-directory tables tables/signal_{}.tex".format(self.survey).split())
 
 
@@ -449,5 +459,5 @@ if __name__ == '__main__':
         cands = Candidates(args.survey, args.alg, cross = (not args.no_cross), threshold = args.sig)
         cands.doitall(table=TABLES)
     else:
-        print 'nada'
+        print 'Need to specify survey and algorithm'
 

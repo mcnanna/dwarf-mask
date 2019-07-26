@@ -30,24 +30,26 @@ fiducialsigdict = {
 
 p = ArgumentParser()
 p.add_argument('-l', '--load', action='store_true', help='Load Candidates objects from pre-made files')
+p.add_argument('-s', '--save', action='store_true', help='Save Candidates objects to pickled files')
 args = p.parse_args()
 
 if not args.load:
-    sigdict = fiducialsigdict
+    sigdict = conservativesigdict
     des_ugali = Candidates('des', 'ugali', sigdict=sigdict)
     des_simple = Candidates('des', 'simple', sigdict=sigdict)
     ps1_ugali = Candidates('ps1', 'ugali', sigdict=sigdict)
     ps1_simple = Candidates('ps1', 'simple', sigdict=sigdict)
 
-    def save(obj, outname):
-        with open(outname, 'wb') as out:
-            pickle.dump(obj, out, protocol=pickle.HIGHEST_PROTOCOL)
+    if args.save:
+        def save(obj, outname):
+            with open(outname, 'wb') as out:
+                pickle.dump(obj, out, protocol=pickle.HIGHEST_PROTOCOL)
 
-    subprocess.call("mkdir -p pickles".split()) 
-    save(des_ugali, 'pickles/des_ugali.pkl')
-    save(des_simple, 'pickles/des_simple.pkl')
-    save(ps1_ugali, 'pickles/ps1_ugali.pkl')
-    save(ps1_simple, 'pickles/ps1_simple.pkl')
+        subprocess.call("mkdir -p pickles".split()) 
+        save(des_ugali, 'pickles/des_ugali.pkl')
+        save(des_simple, 'pickles/des_simple.pkl')
+        save(ps1_ugali, 'pickles/ps1_ugali.pkl')
+        save(ps1_simple, 'pickles/ps1_simple.pkl')
 
 else:
     def load(fname):

@@ -62,7 +62,7 @@ def signal_table(outname, *signals, **kwargs):
     justs = 'lcccccccccccc'
     
     comments = kwargs['comments'] if 'comments' in kwargs.keys() else "\\knowncomments"
-    comments += " References: " + ref_dict_str
+    #comments += " References: " + ref_dict_str
     caption = kwargs['caption'] if 'caption' in kwargs.keys() else "\\knowncaption"
     notes = kwargs['notes'] if 'notes' in kwargs.keys() else "\\knownnotes"
 
@@ -82,7 +82,7 @@ def signal_table(outname, *signals, **kwargs):
                 ''])
     roundings = [0, 1, 1, 2,
             2, 2, 
-            1, 1, 1,
+            1, 1, 2,
             0, 1, 0,
             0]
     #ignore = ['mod_ugali', 'mod_simple', 'angsep_ugali', 'angsep_simple']
@@ -131,6 +131,28 @@ def signal_table(outname, *signals, **kwargs):
             f.write('\n'.join(lines))
             f.truncate()
 
+    # A hack to add tablenotemarks. This is not currently configureable, you just have to edit this code
+    marks_des = [('Tucana IV', 'a')]
+    marks_ps1 = [('Leo I', 'a'), ('Leo II', 'a'), ('Leo IV', 'b'), ('Columba I', 'bc'), ('Bootes III', 'd'), ('Bootes IV', 'b')]
+    marks_both = [('Tucana IV', 'a'), ('Leo I', 'b'), ('Leo II', 'b'), ('Leo IV', 'c'), ('Columba I', 'cd'), ('Bootes III', 'e'), ('Bootes IV', 'c')]
+
+    with open(outname, 'r+') as f:
+        if 'des' in outname:
+            marks = marks_des
+        elif 'ps1' in outname:
+            marks = marks_ps1
+        else:
+            marks = marks_both
+
+        contents = f.read()
+        for sat, mark in marks:
+            idx = contents.index(sat)
+            with_mark = sat + '\\tablenotemark{{{0}}}'.format(mark)
+            contents = contents[:idx] + with_mark + contents[idx+len(sat):]
+
+        f.seek(0)
+        f.write(contents)
+        f.truncate()
 
 def remains_table(outname, *remains, **alg):
     alg = alg.pop('alg', 'simple') # Default alg is 'simple'

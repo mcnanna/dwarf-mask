@@ -81,7 +81,7 @@ def signal_table(outname, *signals, **kwargs):
                 '(kpc)', '(mag)', '(pc)',
                 ''])
     roundings = [0, 1, 1, 2,
-            2, 2, 
+            4, 4, 
             1, 1, 2,
             0, 1, 0,
             0]
@@ -131,6 +131,19 @@ def signal_table(outname, *signals, **kwargs):
             f.write('\n'.join(lines))
             f.truncate()
 
+    # A hack to add in non-float ellipticities:
+    ellipticity_dict = {'Grus II': r'$< 0.2$', 'Columba I': r'$< 0.2$', 'Reticulum III': r'$< 0.4$', 'Crater II': r'$< 0.1$'}
+    with open(outname, 'r+') as f:
+        lines = map(lambda line: line.split(' & '), f.read().splitlines())
+        for line in lines:
+            if line[0] in ellipticity_dict.keys():
+                line[8] = ellipticity_dict[line[0]]
+
+        rejoined = '\n'.join(map(lambda line: ' & '.join(line), lines))
+        f.seek(0)
+        f.write(rejoined)
+        f.truncate()
+
     # A hack to add tablenotemarks. This is not currently configureable, you just have to edit this code
     marks_des = [('Tucana IV', 'a')]
     marks_ps1 = [('Leo I', 'a'), ('Leo II', 'a'), ('Leo IV', 'b'), ('Columba I', 'bc'), ('Bootes III', 'd'), ('Bootes IV', 'b')]
@@ -153,6 +166,7 @@ def signal_table(outname, *signals, **kwargs):
         f.seek(0)
         f.write(contents)
         f.truncate()
+    
 
 def remains_table(outname, *remains, **alg):
     alg = alg.pop('alg', 'simple') # Default alg is 'simple'

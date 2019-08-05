@@ -34,7 +34,7 @@ p.add_argument('-s', '--save', action='store_true', help='Save Candidates object
 args = p.parse_args()
 
 if not args.load:
-    sigdict = conservativesigdict
+    sigdict = fiducialsigdict
     des_ugali = Candidates('des', 'ugali', sigdict=sigdict)
     des_simple = Candidates('des', 'simple', sigdict=sigdict)
     ps1_ugali = Candidates('ps1', 'ugali', sigdict=sigdict)
@@ -114,7 +114,7 @@ def sighist(cands, ax, legend=True, title=True, text=True, xlabel=True, ylabel=T
         new_handles = [Line2D([], [], c=h.get_edgecolor()) for h in handles]
         ax.legend(loc='upper right', handles=new_handles, labels=labels, prop={'size':9})
     if title:
-        ax.set_title('SimpleBinner' if cands.alg == 'simple' else 'ugali', fontdict={'family': 'monospace'})
+        ax.set_title('simple' if cands.alg == 'simple' else 'ugali', fontdict={'family': 'monospace'})
     else:
         ax.set_title(' ')
     if text:

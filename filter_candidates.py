@@ -139,7 +139,7 @@ class Candidates:
 
         ### Signal Detection
 
-        lvdb = pyfits.open('lvdb_v2.fits')[1].data
+        lvdb = pyfits.open('lvdb_v2_updated.fits')[1].data
         pdet_dict = np.load('pdet_{}.npy'.format(self.survey.upper())).item()
         signal = []
         for known_dwarf_catalog in ['McConnachie15', 'ExtraDwarfs']:
@@ -151,8 +151,6 @@ class Candidates:
                 match_candidate, match_known_dwarf, angseps = ugali.utils.projector.match(self.data['RA'], self.data['DEC'], [known_dwarf['ra']], [known_dwarf['dec']], tol=tol)
 
                 name = known_dwarf['name']
-                ra = known_dwarf['ra']
-                dec = known_dwarf['dec']
                 if len(match_known_dwarf) > 0:
                     # keep highest significance match (Usually only 1 match. Exceptions: LMC, Sagittarius dSph, Bootes III, Crater II (simple only))
                     mx = np.argmax(self.data[match_candidate][self.SIG])
@@ -173,6 +171,8 @@ class Candidates:
                 try:
                     lv = lvdb[lvdb['name'] == name][0]
                 except IndexError:
+                    ra = known_dwarf['ra']
+                    dec = known_dwarf['dec']
                     modulus_actual = np.nan
                     distance = np.nan
                     ah = np.nan
@@ -181,6 +181,8 @@ class Candidates:
                     M_V = np.nan
                     ref = r"\ldots"
                 else:
+                    ra = lv['ra']
+                    dec = lv['dec']
                     modulus_actual = lv['distance_modulus']
                     distance = lv['distance_kpc']
                     ah = lv['rhalf']
@@ -371,10 +373,9 @@ class Candidates:
             new_handles = [Line2D([], [], c=h.get_edgecolor()) for h in handles]
             plt.legend(loc='upper right', handles=new_handles, labels=labels, prop={'size':8})
         if title:
-            plt.title('SimpleBinner' if self.alg == 'simple' else 'Ugali', fontdict={'family': 'monospace'})
+            plt.title('simple' if self.alg == 'simple' else 'Ugali', fontdict={'family': 'monospace'})
         else:
             plt.title(' ')
-        #plt.title('{}'.format('Pan-STARRS' if self.survey == 'ps1' else 'DES', 'SimpleBinner' if self.alg == 'simple' else 'Ugali'))
         if text:
             plt.text(0.9, 0.55, self.survey.upper(), transform=ax.transAxes, horizontalalignment='left', fontsize=12, weight='bold')
         plt.xlabel(self.SIG)
